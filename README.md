@@ -1,13 +1,11 @@
-# CONTAS DA CASA — v7 / PRÉ-PUBLICAÇÃO
+# CONTAS DA CASA — v8 ESTRUTURAL
 
-- EDITAR e EXCLUIR com botões destacados.
-- Excluir pede confirmação.
-- Edição altera apenas o lançamento selecionado.
-- CONTAS, ALICE, WILLIAM e CAROL: categorias em ordem alfabética.
-- CASAL: RESTAURANTES → MERCADO → PASSEIOS → demais alfabéticas.
-- EXPORTAR MÊS baixa um CSV na ordem fixa da planilha.
-- O CSV tem colunas GRUPO, CATEGORIA, W, C, TOTAL.
-- Em CONTAS/ALICE/CASAL, W/C representa quem pagou.
-- Em WILLIAM/CAROL, o valor fica na coluna do titular, mesmo se pago pelo outro.
-- Sem histórico financeiro embutido no código público.
-- Gráfico anual dinâmico preservado.
+- Novo TIPO: DESPESA / RECEITA / TERCEIROS.
+- RECEITA: categoria + recebido por W/C.
+- TERCEIROS: entra na FATURA, mas não em gastos, categorias ou acerto.
+- FATURA mostra compras próprias + terceiros.
+- 6 · RECEITAS.
+- 7 · GRÁFICOS.
+- Gráficos: RECEITAS, SALÁRIO W, SALÁRIO C e SALDO (receitas - gastos).
+- Exportar mês inclui gastos, receitas e terceiros.
+- Histórico financeiro pessoal continua fora do código público.
