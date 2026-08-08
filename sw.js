@@ -1,4 +1,4 @@
-const CACHE="contas-pwa-v14";
+const CACHE="contas-pwa-v15";
 const BASE=new URL("./",self.location.href);
 const ASSETS=["","index.html","styles.css","app.js","history.js","manifest.webmanifest","icon-192.png","icon-512.png"].map(x=>new URL(x,BASE).href);
 

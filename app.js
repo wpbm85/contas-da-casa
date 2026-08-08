@@ -2,14 +2,19 @@ const CATEGORIES={"CONTAS": ["FINANCIAMENTO", "CONDOMINIO", "IPTU / VAGA", "INTE
 const ICONS={"FINANCIAMENTO": "🏦", "CONDOMINIO": "🏢", "IPTU / VAGA": "🅿️", "INTERNET": "🌐", "COMGAS": "🔥", "ENEL": "⚡", "FAXINA": "🧹", "NETFLIX": "📺", "ML/DISNEY": "📺", "AMAZON": "📦", "SEGURO BOLSA": "👜", "SEGURO APTO": "🏠", "SEGURO CARRO": "🚗", "IPVA": "🚘", "ESCOLA": "🎒", "CONVENIO": "🩺", "PEDIATRA": "👩‍⚕️", "DENTISTA": "🦷", "ESPORTE": "🏃", "FARMA/SAÚDE": "💊", "ROUPAS": "👕", "PRESENTES": "🎁", "FESTA": "🎉", "HSP": "🏥", "CONV ODONTO": "🦷", "MERCADO": "🛒", "RESTAURANTES": "🍽️", "CARRO": "🚗", "PASSEIOS": "🎡", "FARMÁCIA": "💊", "FARMACIA": "💊", "TRANSPORTE": "🚌", "MANUTENÇÃO": "🛠️", "MÓVEIS": "🪑", "VIAGEM": "✈️", "CELULAR": "📱", "ALIMENTAÇÃO": "🥪", "DOCS": "📄", "COMPRAS": "🛍️", "BELEZA": "💇", "DENTISTA/MED": "🩺", "SEGURO": "🛡️", "OUTROS": "📌"};
 const EXPORT_ORDER={"CONTAS": ["FINANCIAMENTO", "CONDOMINIO", "IPTU / VAGA", "INTERNET", "COMGAS", "ENEL", "FAXINA", "NETFLIX", "ML/DISNEY", "AMAZON", "SEGURO BOLSA", "SEGURO APTO", "SEGURO CARRO", "IPVA", "OUTROS"], "ALICE": ["ESCOLA", "CONVENIO", "PEDIATRA", "DENTISTA", "ESPORTE", "FARMA/SAÚDE", "ROUPAS", "PRESENTES", "FESTA", "HSP", "PASSEIOS", "OUTROS"], "CASAL": ["CONV ODONTO", "MERCADO", "RESTAURANTES", "CARRO", "PASSEIOS", "FARMÁCIA", "TRANSPORTE", "MANUTENÇÃO", "ROUPAS", "MÓVEIS", "PRESENTES", "VIAGEM", "OUTROS"], "WILLIAM": ["CONVENIO", "CELULAR", "ALIMENTAÇÃO", "PASSEIOS", "TRANSPORTE", "DOCS", "FARMACIA", "COMPRAS", "PRESENTES", "BELEZA", "DENTISTA/MED", "SEGURO", "ESPORTE", "OUTROS"], "CAROL": ["CONVENIO", "CELULAR", "ALIMENTAÇÃO", "PASSEIOS", "TRANSPORTE", "DOCS", "FARMACIA", "COMPRAS", "PRESENTES", "BELEZA", "DENTISTA/MED", "SEGURO", "ESPORTE", "OUTROS"]};
 const GROUP_ICON={CONTAS:"🏠",ALICE:"🧒",CASAL:"💞",WILLIAM:"👨",CAROL:"👩"};
+const SUPABASE_URL="https://ofkvpfsgxrojdgyvuune.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY="sb_publishable_vsd_A1GKv9Fr1Gubf8fJaw_XHHywBRM";
+const db=supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
 const KEY="contas_pwa_transactions_v1";
+let remoteRows=[],currentUser=null,realtimeChannel=null;
 let current=new Date(); current.setDate(1); let editingId=null;
 
 const $=s=>document.querySelector(s);
 const money=n=>(n||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
 const mkey=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`;
-const load=()=>JSON.parse(localStorage.getItem(KEY)||"[]");
-const save=d=>localStorage.setItem(KEY,JSON.stringify(d));
+const localLoad=()=>JSON.parse(localStorage.getItem(KEY)||"[]");
+const load=()=>remoteRows;
+const save=()=>{};
 const addMonths=(date,n)=>{let d=new Date(date+"T12:00:00"),day=d.getDate();d.setDate(1);d.setMonth(d.getMonth()+n);d.setDate(Math.min(day,new Date(d.getFullYear(),d.getMonth()+1,0).getDate()));return d.toISOString().slice(0,10)};
 const monthsBetween=(start,end)=>{let s=new Date(start+"T12:00:00"),[y,m]=end.split("-").map(Number);return Math.max(1,(y-s.getFullYear())*12+(m-1-s.getMonth())+1)};
 
@@ -18,7 +23,24 @@ function normalizeLegacy(x){
  if(!x.entryType)x.entryType="EXPENSE";
  return x;
 }
-function loadNorm(){return load().map(normalizeLegacy)}
+function loadNorm(){return load().map(x=>normalizeLegacy({...x}))}
+function dbToApp(r){
+ return {id:r.id,purchaseId:r.purchase_id,entryType:r.entry_type,description:r.description||"",group:r.grupo,category:r.categoria,paidBy:r.paid_by,payment:r.payment==="CASH"?"$":r.payment,card:r.card,incomeCategory:r.income_category,receivedBy:r.received_by,amount:Number(r.amount),date:r.data,competence:r.competence,installmentLabel:r.installment_label,recurringLabel:r.recurring_label};
+}
+function appToDb(x){
+ return {id:x.id,entry_type:x.entryType,description:x.description||null,grupo:x.entryType==="EXPENSE"?x.group:null,categoria:x.entryType==="EXPENSE"?x.category:null,paid_by:x.entryType==="EXPENSE"?x.paidBy:null,payment:x.entryType==="EXPENSE"?(x.payment==="$"?"CASH":x.payment):(x.entryType==="THIRD_PARTY"?"CARD":null),card:((x.entryType==="EXPENSE"&&x.payment==="CARD")||x.entryType==="THIRD_PARTY")?x.card:null,income_category:x.entryType==="INCOME"?x.incomeCategory:null,received_by:x.entryType==="INCOME"?x.receivedBy:null,amount:Number(x.amount),data:x.date,competence:x.competence,purchase_id:x.purchaseId||null,installment_label:x.installmentLabel||null,recurring_label:x.recurringLabel||null};
+}
+function setSync(t){const el=$("#syncStatus");if(el)el.textContent=t}
+async function refreshRemote(){
+ setSync("☁️ SINCRONIZANDO...");
+ const {data,error}=await db.from("lancamentos").select("*").order("data",{ascending:true});
+ if(error){console.error(error);setSync("⚠️ ERRO");return false}
+ remoteRows=(data||[]).map(dbToApp);setSync("☁️ SINCRONIZADO");render();checkMigration();return true;
+}
+function subscribeRealtime(){
+ if(realtimeChannel)db.removeChannel(realtimeChannel);
+ realtimeChannel=db.channel("lancamentos-sync").on("postgres_changes",{event:"*",schema:"public",table:"lancamentos"},()=>refreshRemote()).subscribe();
+}
 function liveForMonth(key){return loadNorm().filter(x=>x.competence===key)}
 
 function buildMonth(key){
@@ -82,7 +104,7 @@ function render(){
    return x.entryType==="EXPENSE"&&x.group===filter;
  }).sort((a,b)=>b.date.localeCompare(a.date));
  $("#transactions").innerHTML=shown.length?shown.map(x=>{const inc=x.entryType==="INCOME",third=x.entryType==="THIRD_PARTY",icon=inc?"💵":third?"🤝":(ICONS[x.category]||"📌"),meta=inc?`RECEITA · ${incomeNames[x.incomeCategory]||x.incomeCategory} · ${x.date.split("-").reverse().join("/")} · RECEBIDO POR ${x.receivedBy}`:third?`TERCEIROS · ${x.date.split("-").reverse().join("/")} · 💳 ${x.card}`:`${GROUP_ICON[x.group]} ${x.group} · ${x.category} · ${x.date.split("-").reverse().join("/")} · PAGO POR ${x.paidBy} · ${x.payment==="CARD"?"💳 "+x.card:"$ CASH"}${x.installmentLabel?" · "+x.installmentLabel:""}${x.recurringLabel?" · 🔁 "+x.recurringLabel:""}`;return `<div class="tx"><div><strong>${icon} ${x.description}</strong><div class="meta">${meta}</div></div><div class="amount">${money(Number(x.amount))}<div class="tx-actions"><button class="action-btn action-edit" data-edit="${x.id}">✏ EDITAR</button><button class="action-btn action-delete" data-del="${x.id}">🗑 EXCLUIR</button></div></div></div>`}).join(""):`<div class="mini">SEM LANÇAMENTOS NESTE MÊS.</div>`;
- document.querySelectorAll("[data-edit]").forEach(b=>b.onclick=()=>openEdit(b.dataset.edit));document.querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>{if(confirm("Excluir este lançamento?")){save(loadNorm().filter(x=>x.id!==b.dataset.del));render()}});
+ document.querySelectorAll("[data-edit]").forEach(b=>b.onclick=()=>openEdit(b.dataset.edit));document.querySelectorAll("[data-del]").forEach(b=>b.onclick=async()=>{if(!confirm("Excluir este lançamento?"))return;setSync("☁️ SALVANDO...");const {error}=await db.from("lancamentos").delete().eq("id",b.dataset.del);if(error){alert("Erro ao excluir: "+error.message);setSync("⚠️ ERRO");return}await refreshRemote()});
  renderChart();
 }
 
@@ -104,12 +126,37 @@ function openEdit(id){
 $("#fab").onclick=()=>{editingId=null;$("#expenseForm").reset();$("#expenseDialogTitle").textContent="➕ NOVO LANÇAMENTO";$("#editHint").classList.add("hidden");$("#entryType").value="EXPENSE";$("#date").value=new Date().toISOString().slice(0,10);$("#group").value="CASAL";$("#payment").value="CARD";$("#installments").value=1;let d=new Date();d.setMonth(d.getMonth()+11);$("#recurringUntil").value=mkey(d);updateCategories();updatePayment();updateRecurring();updateEntryType();$("#expenseDialog").showModal()};
 $("#closeDialog").onclick=()=>$("#expenseDialog").close();$("#entryType").onchange=updateEntryType;$("#group").onchange=updateCategories;$("#payment").onchange=updatePayment;$("#recurring").onchange=updateRecurring;$("#filterGroup").onchange=render;$("#chartFilter").onchange=renderChart;$("#prevMonth").onclick=()=>{current.setMonth(current.getMonth()-1);render()};$("#nextMonth").onclick=()=>{current.setMonth(current.getMonth()+1);render()};
 
-$("#expenseForm").onsubmit=e=>{e.preventDefault();const type=$("#entryType").value,total=Number($("#amount").value),date=$("#date").value;let data=loadNorm();
- if(editingId){const idx=data.findIndex(x=>x.id===editingId);if(idx<0)return;const old=data[idx];let u={...old,entryType:type,amount:total,date,competence:date.slice(0,7)};if(type==="INCOME")u={...u,description:$("#description").value.trim()||$("#incomeCategory").value,incomeCategory:$("#incomeCategory").value,receivedBy:$("#receivedBy").value,group:null,category:null,paidBy:null,payment:null,card:null,installmentLabel:null,recurringLabel:null};else if(type==="THIRD_PARTY")u={...u,description:$("#description").value.trim()||"TERCEIROS",card:$("#card").value,group:null,category:null,paidBy:null,payment:"CARD",incomeCategory:null,receivedBy:null,installmentLabel:null,recurringLabel:null};else u={...u,description:$("#description").value.trim()||$("#category").value,group:$("#group").value,category:$("#category").value,paidBy:$("#paidBy").value,payment:$("#payment").value,card:$("#payment").value==="CARD"?$("#card").value:null,incomeCategory:null,receivedBy:null};data[idx]=u;save(data);editingId=null;$("#expenseDialog").close();current=new Date(date+"T12:00:00");current.setDate(1);render();return}
- if(type==="INCOME"){data.push({id:crypto.randomUUID(),purchaseId:crypto.randomUUID(),entryType:type,description:$("#description").value.trim()||$("#incomeCategory").value,incomeCategory:$("#incomeCategory").value,receivedBy:$("#receivedBy").value,amount:total,date,competence:date.slice(0,7)});save(data);$("#expenseDialog").close();current=new Date(date+"T12:00:00");current.setDate(1);render();return}
- if(type==="THIRD_PARTY"){data.push({id:crypto.randomUUID(),purchaseId:crypto.randomUUID(),entryType:type,description:$("#description").value.trim()||"TERCEIROS",payment:"CARD",card:$("#card").value,amount:total,date,competence:date.slice(0,7)});save(data);$("#expenseDialog").close();current=new Date(date+"T12:00:00");current.setDate(1);render();return}
- const isCard=$("#payment").value==="CARD",n=isCard?Math.max(1,Number($("#installments").value||1)):1,rec=$("#recurring").checked;if(rec&&isCard&&n>1){alert("USE PARCELAMENTO OU RECORRÊNCIA, NÃO OS DOIS.");return}if(rec&&!$("#recurringUntil").value){alert("INFORME ATÉ QUANDO REPETIR.");return}
- let base={purchaseId:crypto.randomUUID(),entryType:"EXPENSE",description:$("#description").value.trim()||$("#category").value,group:$("#group").value,category:$("#category").value,paidBy:$("#paidBy").value,payment:$("#payment").value,card:isCard?$("#card").value:null},reps=rec?monthsBetween(date,$("#recurringUntil").value):n,cents=Math.round(total*100);for(let i=0;i<reps;i++){let d=addMonths(date,i),amount=total,installmentLabel=null,recurringLabel=null;if(!rec&&n>1){let each=Math.floor(cents/n),rem=cents-each*n;amount=(each+(i<rem?1:0))/100;installmentLabel=`${i+1}/${n}`}if(rec)recurringLabel=`MENSAL ${i+1}/${reps}`;data.push({...base,id:crypto.randomUUID(),date:d,competence:d.slice(0,7),amount,installmentLabel,recurringLabel})}save(data);$("#expenseDialog").close();current=new Date(date+"T12:00:00");current.setDate(1);render();
+$("#expenseForm").onsubmit=async e=>{
+ e.preventDefault();
+ const type=$("#entryType").value,total=Number($("#amount").value),date=$("#date").value;
+ let records=[];
+
+ if(editingId){
+   const old=loadNorm().find(x=>x.id===editingId);if(!old)return;
+   let u={...old,entryType:type,amount:total,date,competence:date.slice(0,7)};
+   if(type==="INCOME")u={...u,description:$("#description").value.trim()||$("#incomeCategory").value,incomeCategory:$("#incomeCategory").value,receivedBy:$("#receivedBy").value,group:null,category:null,paidBy:null,payment:null,card:null,installmentLabel:null,recurringLabel:null};
+   else if(type==="THIRD_PARTY")u={...u,description:$("#description").value.trim()||"TERCEIROS",card:$("#card").value,group:null,category:null,paidBy:null,payment:"CARD",incomeCategory:null,receivedBy:null,installmentLabel:null,recurringLabel:null};
+   else u={...u,description:$("#description").value.trim()||$("#category").value,group:$("#group").value,category:$("#category").value,paidBy:$("#paidBy").value,payment:$("#payment").value,card:$("#payment").value==="CARD"?$("#card").value:null,incomeCategory:null,receivedBy:null};
+   const payload=appToDb(u);delete payload.id;
+   setSync("☁️ SALVANDO...");
+   const {error}=await db.from("lancamentos").update(payload).eq("id",editingId);
+   if(error){alert("Erro ao salvar: "+error.message);setSync("⚠️ ERRO");return}
+   editingId=null;$("#expenseDialog").close();current=new Date(date+"T12:00:00");current.setDate(1);await refreshRemote();return;
+ }
+
+ if(type==="INCOME")records=[{id:crypto.randomUUID(),purchaseId:crypto.randomUUID(),entryType:type,description:$("#description").value.trim()||$("#incomeCategory").value,incomeCategory:$("#incomeCategory").value,receivedBy:$("#receivedBy").value,amount:total,date,competence:date.slice(0,7)}];
+ else if(type==="THIRD_PARTY")records=[{id:crypto.randomUUID(),purchaseId:crypto.randomUUID(),entryType:type,description:$("#description").value.trim()||"TERCEIROS",payment:"CARD",card:$("#card").value,amount:total,date,competence:date.slice(0,7)}];
+ else{
+   const isCard=$("#payment").value==="CARD",n=isCard?Math.max(1,Number($("#installments").value||1)):1,rec=$("#recurring").checked;
+   if(rec&&isCard&&n>1){alert("USE PARCELAMENTO OU RECORRÊNCIA, NÃO OS DOIS.");return}
+   if(rec&&!$("#recurringUntil").value){alert("INFORME ATÉ QUANDO REPETIR.");return}
+   const base={purchaseId:crypto.randomUUID(),entryType:"EXPENSE",description:$("#description").value.trim()||$("#category").value,group:$("#group").value,category:$("#category").value,paidBy:$("#paidBy").value,payment:$("#payment").value,card:isCard?$("#card").value:null},reps=rec?monthsBetween(date,$("#recurringUntil").value):n,cents=Math.round(total*100);
+   for(let i=0;i<reps;i++){let d=addMonths(date,i),amount=total,installmentLabel=null,recurringLabel=null;if(!rec&&n>1){let each=Math.floor(cents/n),rem=cents-each*n;amount=(each+(i<rem?1:0))/100;installmentLabel=`${i+1}/${n}`}if(rec)recurringLabel=`MENSAL ${i+1}/${reps}`;records.push({...base,id:crypto.randomUUID(),date:d,competence:d.slice(0,7),amount,installmentLabel,recurringLabel})}
+ }
+ setSync("☁️ SALVANDO...");
+ const {error}=await db.from("lancamentos").insert(records.map(appToDb));
+ if(error){alert("Erro ao salvar: "+error.message);setSync("⚠️ ERRO");return}
+ $("#expenseDialog").close();current=new Date(date+"T12:00:00");current.setDate(1);await refreshRemote();
 };
 
 function csvCell(v){return `"${String(v??"").replace(/"/g,'""')}"`}
@@ -126,5 +173,35 @@ function exportCurrentMonth(){const key=mkey(current),rows=loadNorm().filter(x=>
 }
 $("#exportMonth").onclick=exportCurrentMonth;
 
+
+$("#loginForm").onsubmit=async e=>{e.preventDefault();$("#loginError").classList.add("hidden");const {error}=await db.auth.signInWithPassword({email:$("#loginEmail").value.trim(),password:$("#loginPassword").value});if(error){$("#loginError").textContent="Não foi possível entrar. Confira e-mail e senha.";$("#loginError").classList.remove("hidden")}};
+$("#logoutBtn").onclick=()=>db.auth.signOut();
+
+function checkMigration(){
+ const rows=localLoad().map(x=>normalizeLegacy({...x}));
+ if(!rows.length){$("#migrationBanner").classList.add("hidden");return}
+ $("#migrationText").textContent=`Este aparelho possui ${rows.length} lançamento(s) locais das versões anteriores.`;
+ $("#migrationBanner").classList.remove("hidden");
+}
+$("#dismissMigrationBtn").onclick=()=>$("#migrationBanner").classList.add("hidden");
+$("#migrateLocalBtn").onclick=async()=>{
+ const rows=localLoad().map(x=>normalizeLegacy({...x}));
+ if(!rows.length)return;
+ if(!confirm(`Migrar ${rows.length} lançamento(s) locais para o banco compartilhado?`))return;
+ setSync("☁️ MIGRANDO...");
+ const {error}=await db.from("lancamentos").upsert(rows.map(appToDb),{onConflict:"id",ignoreDuplicates:true});
+ if(error){alert("Erro na migração: "+error.message);setSync("⚠️ ERRO");return}
+ localStorage.removeItem(KEY);$("#migrationBanner").classList.add("hidden");await refreshRemote();alert("Migração concluída.");
+};
+
+async function handleSession(session){
+ currentUser=session?.user||null;
+ if(!currentUser){document.body.classList.remove("authenticated");$("#syncBar").classList.add("hidden");remoteRows=[];if(realtimeChannel){db.removeChannel(realtimeChannel);realtimeChannel=null}return}
+ document.body.classList.add("authenticated");$("#syncBar").classList.remove("hidden");$("#syncUser").textContent="👤 "+(currentUser.email||"USUÁRIO");
+ await refreshRemote();subscribeRealtime();
+}
+db.auth.onAuthStateChange((event,session)=>handleSession(session));
+(async()=>{const {data:{session}}=await db.auth.getSession();await handleSession(session)})();
+
 if("serviceWorker" in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js"));
-updateCategories();updatePayment();updateRecurring();updateEntryType();render();
+updateCategories();updatePayment();updateRecurring();updateEntryType();

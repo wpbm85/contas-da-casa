@@ -1,11 +1,6 @@
-# CONTAS DA CASA — v8 ESTRUTURAL
-
-- Novo TIPO: DESPESA / RECEITA / TERCEIROS.
-- RECEITA: categoria + recebido por W/C.
-- TERCEIROS: entra na FATURA, mas não em gastos, categorias ou acerto.
-- FATURA mostra compras próprias + terceiros.
-- 6 · RECEITAS.
-- 7 · GRÁFICOS.
-- Gráficos: RECEITAS, SALÁRIO W, SALÁRIO C e SALDO (receitas - gastos).
-- Exportar mês inclui gastos, receitas e terceiros.
-- Histórico financeiro pessoal continua fora do código público.
+# CONTAS DA CASA — v9 SUPABASE
+- Login por e-mail/senha
+- Banco compartilhado Supabase
+- Inclusão, edição e exclusão remotas
+- Migração opcional dos dados locais antigos
+- Publishable key no frontend; nenhuma secret/service_role key incluída

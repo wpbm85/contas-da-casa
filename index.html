@@ -6,6 +6,30 @@
 <link rel="manifest" href="manifest.webmanifest"><link rel="stylesheet" href="styles.css">
 </head>
 <body>
+<div id="authScreen" class="auth-screen">
+  <div class="auth-card">
+    <div class="auth-brand">💰 CONTAS DA CASA</div>
+    <h2>ENTRAR</h2>
+    <p class="auth-help">Acesso restrito.</p>
+    <form id="loginForm">
+      <label>📧 E-MAIL<input id="loginEmail" type="email" autocomplete="username" required></label>
+      <label>🔑 SENHA<input id="loginPassword" type="password" autocomplete="current-password" required></label>
+      <button class="primary" type="submit">ENTRAR</button>
+      <div id="loginError" class="auth-error hidden"></div>
+    </form>
+  </div>
+</div>
+<div id="syncBar" class="sync-bar hidden">
+  <span id="syncUser"></span><span id="syncStatus">☁️ SINCRONIZADO</span>
+  <button id="logoutBtn" type="button">SAIR</button>
+</div>
+<div id="migrationBanner" class="migration-banner hidden">
+  <div><strong>📦 DADOS LOCAIS ENCONTRADOS</strong><br><span id="migrationText"></span></div>
+  <div class="migration-actions">
+    <button id="migrateLocalBtn" class="secondary-btn" type="button">MIGRAR PARA O BANCO</button>
+    <button id="dismissMigrationBtn" class="ghost-small" type="button">IGNORAR</button>
+  </div>
+</div>
 <header class="topbar">
   <div><div class="eyebrow">CONTAS DA CASA</div><h1 id="monthTitle"></h1></div>
   <div class="month-nav"><button id="prevMonth">‹</button><button id="nextMonth">›</button></div>
@@ -127,5 +151,5 @@
 <button class="primary" type="submit">SALVAR</button>
 </form>
 </dialog>
-<script src="history.js"></script><script src="app.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="history.js"></script><script src="app.js"></script>
 </body></html>
