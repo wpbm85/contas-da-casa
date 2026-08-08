@@ -1,9 +1,18 @@
-# Atualização v8
+# Atualização v8.1
 
-1. No repositório `contas-da-casa`, use **Add file > Upload files**.
-2. Arraste TODOS os arquivos desta pasta/ZIP para a raiz do repositório.
-3. Confirme o commit na branch `main`.
-4. Aguarde o GitHub Pages concluir o deployment.
-5. Abra o app e atualize a página. O cache do PWA foi incrementado nesta versão.
+Mudanças:
+- Filtro WILLIAM mostra:
+  - despesas do grupo WILLIAM;
+  - receitas recebidas por W;
+  - lançamentos TERCEIROS no cartão W.
+- Filtro CAROL faz o equivalente para C.
+- CSV usa padrão brasileiro:
+  - separador de colunas: ponto e vírgula;
+  - decimais: vírgula;
+  - números inteiros saem sem casas decimais (ex.: 290 em vez de 290,00).
 
-Esta versão mantém o mesmo armazenamento local usado anteriormente.
+Atualização no GitHub:
+1. Add file > Upload files.
+2. Suba todos os arquivos deste pacote.
+3. Commit sugerido: `Filtro W C e export pt-BR v8.1`.
+4. Aguarde o Pages atualizar.

@@ -75,7 +75,12 @@ function render(){
  const incomeNames={SALARIO:"SALÁRIO",BONUS:"BÔNUS",REEMBOLSO:"REEMBOLSO",VENDA:"VENDA",RESTITUICAO:"RESTITUIÇÃO",OUTROS:"OUTROS"};
  $("#incomeBreakdown").innerHTML=d.income.byCategory.length?d.income.byCategory.map(([k,v])=>`<div class="income-row"><span>${incomeNames[k]||k}</span><strong>${money(v)}</strong></div>`).join(""):`<div class="mini">SEM RECEITAS NESTE MÊS.</div>`;
  $("#historicalNotice").classList.toggle("hidden",!d.hist);
- const filter=$("#filterGroup").value,shown=d.live.filter(x=>!filter||(x.entryType==="EXPENSE"&&x.group===filter)).sort((a,b)=>b.date.localeCompare(a.date));
+ const filter=$("#filterGroup").value,shown=d.live.filter(x=>{
+   if(!filter) return true;
+   if(filter==="WILLIAM") return (x.entryType==="EXPENSE"&&x.group==="WILLIAM") || (x.entryType==="INCOME"&&x.receivedBy==="W") || (x.entryType==="THIRD_PARTY"&&x.card==="W");
+   if(filter==="CAROL") return (x.entryType==="EXPENSE"&&x.group==="CAROL") || (x.entryType==="INCOME"&&x.receivedBy==="C") || (x.entryType==="THIRD_PARTY"&&x.card==="C");
+   return x.entryType==="EXPENSE"&&x.group===filter;
+ }).sort((a,b)=>b.date.localeCompare(a.date));
  $("#transactions").innerHTML=shown.length?shown.map(x=>{const inc=x.entryType==="INCOME",third=x.entryType==="THIRD_PARTY",icon=inc?"💵":third?"🤝":(ICONS[x.category]||"📌"),meta=inc?`RECEITA · ${incomeNames[x.incomeCategory]||x.incomeCategory} · ${x.date.split("-").reverse().join("/")} · RECEBIDO POR ${x.receivedBy}`:third?`TERCEIROS · ${x.date.split("-").reverse().join("/")} · 💳 ${x.card}`:`${GROUP_ICON[x.group]} ${x.group} · ${x.category} · ${x.date.split("-").reverse().join("/")} · PAGO POR ${x.paidBy} · ${x.payment==="CARD"?"💳 "+x.card:"$ CASH"}${x.installmentLabel?" · "+x.installmentLabel:""}${x.recurringLabel?" · 🔁 "+x.recurringLabel:""}`;return `<div class="tx"><div><strong>${icon} ${x.description}</strong><div class="meta">${meta}</div></div><div class="amount">${money(Number(x.amount))}<div class="tx-actions"><button class="action-btn action-edit" data-edit="${x.id}">✏ EDITAR</button><button class="action-btn action-delete" data-del="${x.id}">🗑 EXCLUIR</button></div></div></div>`}).join(""):`<div class="mini">SEM LANÇAMENTOS NESTE MÊS.</div>`;
  document.querySelectorAll("[data-edit]").forEach(b=>b.onclick=()=>openEdit(b.dataset.edit));document.querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>{if(confirm("Excluir este lançamento?")){save(loadNorm().filter(x=>x.id!==b.dataset.del));render()}});
  renderChart();
@@ -108,10 +113,15 @@ $("#expenseForm").onsubmit=e=>{e.preventDefault();const type=$("#entryType").val
 };
 
 function csvCell(v){return `"${String(v??"").replace(/"/g,'""')}"`}
+function ptDecimal(n){
+ const v=Number(n||0);
+ if(Number.isInteger(v)) return String(v);
+ return v.toFixed(2).replace(".",",");
+}
 function exportCurrentMonth(){const key=mkey(current),rows=loadNorm().filter(x=>x.competence===key),expenses=rows.filter(x=>x.entryType==="EXPENSE"),incomes=rows.filter(x=>x.entryType==="INCOME"),thirds=rows.filter(x=>x.entryType==="THIRD_PARTY"),lines=[["GRUPO","CATEGORIA","W","C","TOTAL"]];let gw=0,gc=0;
- for(const group of ["CONTAS","ALICE","CASAL","WILLIAM","CAROL"])for(const category of EXPORT_ORDER[group]){const items=expenses.filter(x=>x.group===group&&x.category===category);let w=0,c=0;for(const x of items){if(group==="WILLIAM")w+=Number(x.amount);else if(group==="CAROL")c+=Number(x.amount);else if(x.paidBy==="W")w+=Number(x.amount);else c+=Number(x.amount)}gw+=w;gc+=c;lines.push([group,category,w.toFixed(2),c.toFixed(2),(w+c).toFixed(2)])}
- lines.push(["TOTAL GASTOS","",gw.toFixed(2),gc.toFixed(2),(gw+gc).toFixed(2)],[],["RECEITAS","CATEGORIA","W","C","TOTAL"]);const incCats=["SALARIO","BONUS","REEMBOLSO","VENDA","RESTITUICAO","OUTROS"];let iw=0,ic=0;for(const cat of incCats){let w=incomes.filter(x=>x.incomeCategory===cat&&x.receivedBy==="W").reduce((s,x)=>s+Number(x.amount),0),c=incomes.filter(x=>x.incomeCategory===cat&&x.receivedBy==="C").reduce((s,x)=>s+Number(x.amount),0);iw+=w;ic+=c;lines.push(["RECEITAS",cat,w.toFixed(2),c.toFixed(2),(w+c).toFixed(2)])}
- lines.push(["TOTAL RECEITAS","",iw.toFixed(2),ic.toFixed(2),(iw+ic).toFixed(2)],[]);const tw=thirds.filter(x=>x.card==="W").reduce((s,x)=>s+Number(x.amount),0),tc=thirds.filter(x=>x.card==="C").reduce((s,x)=>s+Number(x.amount),0);lines.push(["TERCEIROS","CARTÃO W","CARTÃO C","TOTAL"],["TERCEIROS",tw.toFixed(2),tc.toFixed(2),(tw+tc).toFixed(2)]);
+ for(const group of ["CONTAS","ALICE","CASAL","WILLIAM","CAROL"])for(const category of EXPORT_ORDER[group]){const items=expenses.filter(x=>x.group===group&&x.category===category);let w=0,c=0;for(const x of items){if(group==="WILLIAM")w+=Number(x.amount);else if(group==="CAROL")c+=Number(x.amount);else if(x.paidBy==="W")w+=Number(x.amount);else c+=Number(x.amount)}gw+=w;gc+=c;lines.push([group,category,ptDecimal(w),ptDecimal(c),ptDecimal(w+c)])}
+ lines.push(["TOTAL GASTOS","",ptDecimal(gw),ptDecimal(gc),ptDecimal(gw+gc)],[],["RECEITAS","CATEGORIA","W","C","TOTAL"]);const incCats=["SALARIO","BONUS","REEMBOLSO","VENDA","RESTITUICAO","OUTROS"];let iw=0,ic=0;for(const cat of incCats){let w=incomes.filter(x=>x.incomeCategory===cat&&x.receivedBy==="W").reduce((s,x)=>s+Number(x.amount),0),c=incomes.filter(x=>x.incomeCategory===cat&&x.receivedBy==="C").reduce((s,x)=>s+Number(x.amount),0);iw+=w;ic+=c;lines.push(["RECEITAS",cat,ptDecimal(w),ptDecimal(c),ptDecimal(w+c)])}
+ lines.push(["TOTAL RECEITAS","",ptDecimal(iw),ptDecimal(ic),ptDecimal(iw+ic)],[]);const tw=thirds.filter(x=>x.card==="W").reduce((s,x)=>s+Number(x.amount),0),tc=thirds.filter(x=>x.card==="C").reduce((s,x)=>s+Number(x.amount),0);lines.push(["TERCEIROS","CARTÃO W","CARTÃO C","TOTAL"],["TERCEIROS",ptDecimal(tw),ptDecimal(tc),ptDecimal(tw+tc)]);
  const csv="\uFEFF"+lines.map(r=>r.map(csvCell).join(";")).join("\r\n"),blob=new Blob([csv],{type:"text/csv;charset=utf-8"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=`contas_${key}.csv`;document.body.appendChild(a);a.click();const url=a.href;a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
 $("#exportMonth").onclick=exportCurrentMonth;
