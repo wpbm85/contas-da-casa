@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b3a66"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="apple-touch-icon" href="icon-192.png"><title>Contas da Casa</title>
+<link rel="manifest" href="manifest.webmanifest"><link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="topbar">
+  <div><div class="eyebrow">CONTAS DA CASA</div><h1 id="monthTitle"></h1></div>
+  <div class="month-nav"><button id="prevMonth">‹</button><button id="nextMonth">›</button></div>
+</header>
+<main>
+<section class="card sec-family">
+  <h2>1 · TOTAL FAMÍLIA</h2>
+  <div class="big" id="familyTotal">R$ 0,00</div>
+  <div class="split"><div><span>👨 W PAGOU</span><strong id="wPaid"></strong></div><div><span>👩 C PAGOU</span><strong id="cPaid"></strong></div></div>
+  <div class="settlement" id="settlement"></div>
+</section>
+
+<section class="card sec-card">
+  <h2>2 · FATURA</h2>
+  <div class="split"><div><span>💳 CARTÃO W</span><strong id="cardW"></strong></div><div><span>💳 CARTÃO C</span><strong id="cardC"></strong></div></div>
+  <div class="total-line"><span>TOTAL DAS FATURAS</span><strong id="cardTotal"></strong></div>
+</section>
+
+<section class="card sec-totals">
+  <div class="section-title"><h2>3 · TOTAIS</h2><span class="mini">POR CATEGORIA</span></div>
+  <div id="categoryTotals" class="category-list"></div>
+</section>
+
+<section class="card sec-subtotals">
+  <h2>4 · SUBTOTAIS</h2>
+  <div class="subgrid">
+    <div class="subtile contas"><span>🏠 CONTAS</span><strong id="totalContas"></strong></div>
+    <div class="subtile alice"><span>🧒 ALICE</span><strong id="totalAlice"></strong></div>
+    <div class="subtile casal"><span>💞 CASAL</span><strong id="totalCasal"></strong></div>
+    <div class="subtile william"><span>👨 W</span><strong id="totalWilliam"></strong></div>
+    <div class="subtile carol"><span>👩 C</span><strong id="totalCarol"></strong></div>
+  </div>
+</section>
+
+<section class="card sec-launches">
+  <div class="section-title launches-head"><h2>5 · LANÇAMENTOS</h2>
+    <div class="launch-tools">
+      <button id="exportMonth" class="secondary-btn" type="button">⬇ EXPORTAR MÊS</button>
+      <select id="filterGroup">
+      <option value="">TODOS</option><option value="CASAL">CASAL</option><option value="ALICE">ALICE</option>
+      <option value="CONTAS">CONTAS</option><option value="WILLIAM">WILLIAM</option><option value="CAROL">CAROL</option>
+      </select>
+    </div>
+  </div>
+  <div id="historicalNotice" class="history-note hidden">📚 MÊS IMPORTADO DA PLANILHA: OS VALORES HISTÓRICOS SÃO CONSOLIDADOS. LANÇAMENTOS INDIVIDUAIS NÃO FORAM INVENTADOS.</div>
+  <div id="transactions" class="stack"></div>
+</section>
+
+<section class="card sec-history">
+  <div class="section-title">
+    <h2>6 · GRÁFICOS · <span id="chartYear"></span></h2>
+    <select id="chartFilter">
+      <option value="FAMILY">TOTAL FAMÍLIA</option>
+      <option value="CONTAS">CONTAS</option>
+      <option value="ALICE">ALICE</option>
+      <option value="CASAL">CASAL</option>
+      <option value="WILLIAM">WILLIAM</option>
+      <option value="CAROL">CAROL</option>
+      <option value="CARDS">FATURAS</option>
+    </select>
+  </div>
+  <div id="historyChart" class="chart"></div>
+</section>
+<div class="privacy-note">🔒 ESTA VERSÃO PÚBLICA NÃO CONTÉM HISTÓRICO FINANCEIRO EMBUTIDO.</div>
+</main>
+
+<button id="fab" class="fab">＋</button>
+<dialog id="expenseDialog">
+<form id="expenseForm">
+<div class="dialog-head"><h2 id="expenseDialogTitle">➕ NOVO GASTO</h2><button type="button" id="closeDialog" class="ghost">✕</button></div><div id="editHint" class="edit-hint hidden">✏️ A EDIÇÃO ALTERA SOMENTE ESTE LANÇAMENTO. PARCELAS/RECORRÊNCIAS FUTURAS NÃO SERÃO MODIFICADAS.</div>
+<label>💰 VALOR<input id="amount" type="number" min=".01" step=".01" required placeholder="0,00"></label>
+<label>📝 DESCRIÇÃO <span class="optional">(OPCIONAL)</span><input id="description" maxlength="80" placeholder="Ex.: Pão de Açúcar"></label>
+<div class="row"><label>📅 DATA<input id="date" type="date" required></label><label>🗂️ GRUPO<select id="group">
+<option value="CASAL">💞 CASAL</option><option value="ALICE">🧒 ALICE</option><option value="CONTAS">🏠 CONTAS</option>
+<option value="WILLIAM">👨 W</option><option value="CAROL">👩 C</option></select></label></div>
+<label class="category-primary">🏷️ CATEGORIA<select id="category"></select></label>
+<div class="row"><label>🙋 PAGO POR<select id="paidBy"><option value="W">W</option><option value="C">C</option></select></label>
+<label>💵 PAGAMENTO<select id="payment"><option value="CARD">💳 CARTÃO</option><option value="$">$ CASH</option></select></label></div>
+<div id="cardFields" class="hidden subbox"><div class="row"><label>💳 CARTÃO<select id="card"><option value="W">CARTÃO W</option><option value="C">CARTÃO C</option></select></label><label>🔢 PARCELAS<input id="installments" type="number" min="1" max="60" value="1"></label></div></div>
+<label class="checkline"><input id="recurring" type="checkbox"><span>🔁 REPETIR MENSALMENTE</span></label>
+<div id="recurringFields" class="hidden subbox"><label>⏳ REPETIR ATÉ<input id="recurringUntil" type="month"></label></div>
+<button class="primary" type="submit">SALVAR GASTO</button>
+</form>
+</dialog>
+<script src="history.js"></script><script src="app.js"></script>
+</body></html>
