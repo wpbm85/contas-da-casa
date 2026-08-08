@@ -65,7 +65,7 @@ function renderChart(){
 
  $("#historyChart").innerHTML=`<svg viewBox="0 0 ${W} ${H}" aria-label="Gráfico anual de ${year}"><line x1="${pad}" y1="${H-pad}" x2="${W-pad}" y2="${H-pad}" stroke="#d5dde4"/><polyline points="${pts}" fill="none" stroke="#526f92" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/>${dots}${labels}</svg>`;
 }
-function render()function render(){
+function render(){
  const key=mkey(current),d=buildMonth(key);
  $("#monthTitle").textContent=current.toLocaleDateString("pt-BR",{month:"long",year:"numeric"}).toUpperCase();
  $("#familyTotal").textContent=money(d.family.total);$("#wPaid").textContent=money(d.family.W);$("#cPaid").textContent=money(d.family.C);
