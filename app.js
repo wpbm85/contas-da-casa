@@ -192,8 +192,6 @@ function updateSplitPayment(){
    $("#cardFields").classList.add("hidden");
    $("#recurring").checked=false;$("#recurringFields").classList.add("hidden");
  }
- $("#splitCardWLabel").classList.toggle("hidden",$("#splitPaymentW").value!=="CARD");
- $("#splitCardCLabel").classList.toggle("hidden",$("#splitPaymentC").value!=="CARD");
 }
 function updateEntryType(){
  const type=$("#entryType").value,inc=type==="INCOME",third=type==="THIRD_PARTY",expense=type==="EXPENSE";
@@ -209,7 +207,7 @@ function updateEntryType(){
 }
 function openEdit(id){
  const x=loadNorm().find(t=>t.id===id);if(!x)return;editingId=id;$("#expenseForm").reset();$("#expenseDialogTitle").textContent="✏️ EDITAR LANÇAMENTO";$("#editHint").classList.remove("hidden");$("#entryType").value=x.entryType||"EXPENSE";$("#amount").value=x.amount;$("#description").value=(x.description===x.category?"":x.description);$("#date").value=x.date;
- if(x.entryType==="INCOME"){$("#incomeCategory").value=x.incomeCategory||"OUTROS";$("#receivedBy").value=x.receivedBy||"W"}else if(x.entryType==="THIRD_PARTY"){$("#card").value=x.card||"W"}else{$("#group").value=x.group;updateCategories();$("#category").value=x.category;if(hasSplit(x)){$("#splitPayment").checked=true;$("#splitAmountW").value=x.paymentSplit?.W?.amount||"";$("#splitAmountC").value=x.paymentSplit?.C?.amount||"";$("#splitPaymentW").value=x.paymentSplit?.W?.payment||"CARD";$("#splitPaymentC").value=x.paymentSplit?.C?.payment||"CARD";$("#splitCardW").value=x.paymentSplit?.W?.card||"W";$("#splitCardC").value=x.paymentSplit?.C?.card||"C"}else{$("#splitPayment").checked=false;$("#paidBy").value=x.paidBy;$("#payment").value=x.payment;if(x.payment==="CARD")$("#card").value=x.card||"W"}}
+ if(x.entryType==="INCOME"){$("#incomeCategory").value=x.incomeCategory||"OUTROS";$("#receivedBy").value=x.receivedBy||"W"}else if(x.entryType==="THIRD_PARTY"){$("#card").value=x.card||"W"}else{$("#group").value=x.group;updateCategories();$("#category").value=x.category;if(hasSplit(x)){$("#splitPayment").checked=true;$("#splitAmountW").value=x.paymentSplit?.W?.amount||"";$("#splitAmountC").value=x.paymentSplit?.C?.amount||"";$("#splitPaymentW").value=x.paymentSplit?.W?.payment||"CARD";$("#splitPaymentC").value=x.paymentSplit?.C?.payment||"CARD"}else{$("#splitPayment").checked=false;$("#paidBy").value=x.paidBy;$("#payment").value=x.payment;if(x.payment==="CARD")$("#card").value=x.card||"W"}}
  $("#installments").value=1;$("#recurring").checked=false;updateRecurring();updateEntryType();$("#expenseDialog").showModal();
 }
 
@@ -231,7 +229,7 @@ $("#expenseForm").onsubmit=async e=>{
      if($("#splitPayment").checked){
        const w=Number($("#splitAmountW").value||0),c=Number($("#splitAmountC").value||0);
        if(w<=0||c<=0||Math.abs((w+c)-total)>.009){alert("NO PAGAMENTO DIVIDIDO, INFORME VALORES POSITIVOS PARA W E C E FAÇA A SOMA BATER COM O VALOR TOTAL.");return}
-       paymentSplit={W:{amount:w,payment:$("#splitPaymentW").value,card:$("#splitPaymentW").value==="CARD"?$("#splitCardW").value:null},C:{amount:c,payment:$("#splitPaymentC").value,card:$("#splitPaymentC").value==="CARD"?$("#splitCardC").value:null}};
+       paymentSplit={W:{amount:w,payment:$("#splitPaymentW").value,card:$("#splitPaymentW").value==="CARD"?"W":null},C:{amount:c,payment:$("#splitPaymentC").value,card:$("#splitPaymentC").value==="CARD"?"C":null}};
      }
      u={...u,description:$("#description").value.trim()||$("#category").value,group:$("#group").value,category:$("#category").value,paymentSplit,paidBy:paymentSplit?null:$("#paidBy").value,payment:paymentSplit?null:$("#payment").value,card:paymentSplit?null:($("#payment").value==="CARD"?$("#card").value:null),incomeCategory:null,receivedBy:null};
    }
@@ -250,7 +248,7 @@ $("#expenseForm").onsubmit=async e=>{
    if(split){
      const w=Number($("#splitAmountW").value||0),c=Number($("#splitAmountC").value||0);
      if(w<=0||c<=0||Math.abs((w+c)-total)>.009){alert("NO PAGAMENTO DIVIDIDO, INFORME VALORES POSITIVOS PARA W E C E FAÇA A SOMA BATER COM O VALOR TOTAL.");return}
-     paymentSplit={W:{amount:w,payment:$("#splitPaymentW").value,card:$("#splitPaymentW").value==="CARD"?$("#splitCardW").value:null},C:{amount:c,payment:$("#splitPaymentC").value,card:$("#splitPaymentC").value==="CARD"?$("#splitCardC").value:null}};
+     paymentSplit={W:{amount:w,payment:$("#splitPaymentW").value,card:$("#splitPaymentW").value==="CARD"?"W":null},C:{amount:c,payment:$("#splitPaymentC").value,card:$("#splitPaymentC").value==="CARD"?"C":null}};
    }
    const isCard=!split&&$("#payment").value==="CARD",n=split?1:(isCard?Math.max(1,Number($("#installments").value||1)):1),rec=split?false:$("#recurring").checked;
    if(rec&&isCard&&n>1){alert("USE PARCELAMENTO OU RECORRÊNCIA, NÃO OS DOIS.");return}
