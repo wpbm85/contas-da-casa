@@ -182,7 +182,12 @@ function orderedCategories(group){
  return [...CATEGORIES[group]].sort((a,b)=>a.localeCompare(b,"pt-BR"));
 }
 function updateCategories(){let g=$("#group").value,ordered=orderedCategories(g);$("#category").innerHTML=ordered.map(c=>`<option value="${c}">${ICONS[c]||"📌"} ${c}</option>`).join("");if(g==="CASAL")$("#category").value="RESTAURANTES"}
-function updatePayment(){$("#cardFields").classList.toggle("hidden",$("#payment").value!=="CARD")}
+function updatePayment(){
+ const isCard=$("#payment").value==="CARD";
+ $("#cardFields").classList.toggle("hidden",!isCard);
+ $("#cardLabel").classList.add("hidden");
+ if(isCard) $("#card").value=$("#paidBy").value;
+}
 function updateRecurring(){$("#recurringFields").classList.toggle("hidden",!$("#recurring").checked)}
 function updateSplitPayment(){
  const split=$("#splitPayment").checked&&$("#entryType").value==="EXPENSE";
@@ -202,17 +207,17 @@ function updateEntryType(){
  $("#splitPaymentToggle").classList.toggle("hidden",!expense);
  $("#recurring").closest("label").classList.toggle("hidden",inc||third||($("#splitPayment").checked&&expense));
  if(inc)$("#cardFields").classList.add("hidden");
- else if(third){$("#splitPayment").checked=false;$("#expensePaymentFields").classList.add("hidden");$("#cardFields").classList.remove("hidden")}
+ else if(third){$("#splitPayment").checked=false;$("#expensePaymentFields").classList.add("hidden");$("#cardFields").classList.remove("hidden");$("#cardLabel").classList.remove("hidden")}
  else {updatePayment();updateSplitPayment()}
 }
 function openEdit(id){
  const x=loadNorm().find(t=>t.id===id);if(!x)return;editingId=id;$("#expenseForm").reset();$("#expenseDialogTitle").textContent="✏️ EDITAR LANÇAMENTO";$("#editHint").classList.remove("hidden");$("#entryType").value=x.entryType||"EXPENSE";$("#amount").value=x.amount;$("#description").value=(x.description===x.category?"":x.description);$("#date").value=x.date;
- if(x.entryType==="INCOME"){$("#incomeCategory").value=x.incomeCategory||"OUTROS";$("#receivedBy").value=x.receivedBy||"W"}else if(x.entryType==="THIRD_PARTY"){$("#card").value=x.card||"W"}else{$("#group").value=x.group;updateCategories();$("#category").value=x.category;if(hasSplit(x)){$("#splitPayment").checked=true;$("#splitAmountW").value=x.paymentSplit?.W?.amount||"";$("#splitAmountC").value=x.paymentSplit?.C?.amount||"";$("#splitPaymentW").value=x.paymentSplit?.W?.payment||"CARD";$("#splitPaymentC").value=x.paymentSplit?.C?.payment||"CARD"}else{$("#splitPayment").checked=false;$("#paidBy").value=x.paidBy;$("#payment").value=x.payment;if(x.payment==="CARD")$("#card").value=x.card||"W"}}
+ if(x.entryType==="INCOME"){$("#incomeCategory").value=x.incomeCategory||"OUTROS";$("#receivedBy").value=x.receivedBy||"W"}else if(x.entryType==="THIRD_PARTY"){$("#card").value=x.card||"W"}else{$("#group").value=x.group;updateCategories();$("#category").value=x.category;if(hasSplit(x)){$("#splitPayment").checked=true;$("#splitAmountW").value=x.paymentSplit?.W?.amount||"";$("#splitAmountC").value=x.paymentSplit?.C?.amount||"";$("#splitPaymentW").value=x.paymentSplit?.W?.payment||"CARD";$("#splitPaymentC").value=x.paymentSplit?.C?.payment||"CARD"}else{$("#splitPayment").checked=false;$("#paidBy").value=x.paidBy;$("#payment").value=x.payment;if(x.payment==="CARD")$("#card").value=x.paidBy||"W"}}
  $("#installments").value=1;$("#recurring").checked=false;updateRecurring();updateEntryType();$("#expenseDialog").showModal();
 }
 
 $("#fab").onclick=()=>{editingId=null;$("#expenseForm").reset();$("#expenseDialogTitle").textContent="➕ NOVO LANÇAMENTO";$("#editHint").classList.add("hidden");$("#entryType").value="EXPENSE";$("#splitPayment").checked=false;$("#splitAmountW").value="";$("#splitAmountC").value="";$("#date").value=new Date().toISOString().slice(0,10);$("#group").value="CASAL";$("#payment").value="CARD";$("#installments").value=1;let d=new Date();d.setMonth(d.getMonth()+11);$("#recurringUntil").value=mkey(d);updateCategories();updatePayment();updateRecurring();updateEntryType();updateSplitPayment();$("#expenseDialog").showModal()};
-$("#closeDialog").onclick=()=>$("#expenseDialog").close();$("#entryType").onchange=updateEntryType;$("#splitPayment").onchange=()=>{updateSplitPayment();updateEntryType()};$("#splitPaymentW").onchange=updateSplitPayment;$("#splitPaymentC").onchange=updateSplitPayment;$("#group").onchange=updateCategories;$("#payment").onchange=updatePayment;$("#recurring").onchange=updateRecurring;$("#filterGroup").onchange=render;$("#chartFilter").onchange=renderChart;$("#prevMonth").onclick=()=>{current.setMonth(current.getMonth()-1);render()};$("#nextMonth").onclick=()=>{current.setMonth(current.getMonth()+1);render()};
+$("#closeDialog").onclick=()=>$("#expenseDialog").close();$("#entryType").onchange=updateEntryType;$("#splitPayment").onchange=()=>{updateSplitPayment();updateEntryType()};$("#splitPaymentW").onchange=updateSplitPayment;$("#splitPaymentC").onchange=updateSplitPayment;$("#group").onchange=updateCategories;$("#paidBy").onchange=updatePayment;$("#payment").onchange=updatePayment;$("#recurring").onchange=updateRecurring;$("#filterGroup").onchange=render;$("#chartFilter").onchange=renderChart;$("#prevMonth").onclick=()=>{current.setMonth(current.getMonth()-1);render()};$("#nextMonth").onclick=()=>{current.setMonth(current.getMonth()+1);render()};
 
 $("#expenseForm").onsubmit=async e=>{
  e.preventDefault();
@@ -231,7 +236,7 @@ $("#expenseForm").onsubmit=async e=>{
        if(w<=0||c<=0||Math.abs((w+c)-total)>.009){alert("NO PAGAMENTO DIVIDIDO, INFORME VALORES POSITIVOS PARA W E C E FAÇA A SOMA BATER COM O VALOR TOTAL.");return}
        paymentSplit={W:{amount:w,payment:$("#splitPaymentW").value,card:$("#splitPaymentW").value==="CARD"?"W":null},C:{amount:c,payment:$("#splitPaymentC").value,card:$("#splitPaymentC").value==="CARD"?"C":null}};
      }
-     u={...u,description:$("#description").value.trim()||$("#category").value,group:$("#group").value,category:$("#category").value,paymentSplit,paidBy:paymentSplit?null:$("#paidBy").value,payment:paymentSplit?null:$("#payment").value,card:paymentSplit?null:($("#payment").value==="CARD"?$("#card").value:null),incomeCategory:null,receivedBy:null};
+     u={...u,description:$("#description").value.trim()||$("#category").value,group:$("#group").value,category:$("#category").value,paymentSplit,paidBy:paymentSplit?null:$("#paidBy").value,payment:paymentSplit?null:$("#payment").value,card:paymentSplit?null:($("#payment").value==="CARD"?$("#paidBy").value:null),incomeCategory:null,receivedBy:null};
    }
    const payload=appToDb(u);delete payload.id;
    setSync("☁️ SALVANDO...");
@@ -253,7 +258,7 @@ $("#expenseForm").onsubmit=async e=>{
    const isCard=!split&&$("#payment").value==="CARD",n=split?1:(isCard?Math.max(1,Number($("#installments").value||1)):1),rec=split?false:$("#recurring").checked;
    if(rec&&isCard&&n>1){alert("USE PARCELAMENTO OU RECORRÊNCIA, NÃO OS DOIS.");return}
    if(rec&&!$("#recurringUntil").value){alert("INFORME ATÉ QUANDO REPETIR.");return}
-   const base={purchaseId:crypto.randomUUID(),entryType:"EXPENSE",description:$("#description").value.trim()||$("#category").value,group:$("#group").value,category:$("#category").value,paymentSplit,paidBy:split?null:$("#paidBy").value,payment:split?null:$("#payment").value,card:isCard?$("#card").value:null},reps=rec?monthsBetween(date,$("#recurringUntil").value):n,cents=Math.round(total*100);
+   const base={purchaseId:crypto.randomUUID(),entryType:"EXPENSE",description:$("#description").value.trim()||$("#category").value,group:$("#group").value,category:$("#category").value,paymentSplit,paidBy:split?null:$("#paidBy").value,payment:split?null:$("#payment").value,card:isCard?$("#paidBy").value:null},reps=rec?monthsBetween(date,$("#recurringUntil").value):n,cents=Math.round(total*100);
    for(let i=0;i<reps;i++){let d=addMonths(date,i),amount=total,installmentLabel=null,recurringLabel=null;if(!rec&&n>1){let each=Math.floor(cents/n),rem=cents-each*n;amount=(each+(i<rem?1:0))/100;installmentLabel=`${i+1}/${n}`}if(rec)recurringLabel=`MENSAL ${i+1}/${reps}`;records.push({...base,id:crypto.randomUUID(),date:d,competence:d.slice(0,7),amount,installmentLabel,recurringLabel})}
  }
  setSync("☁️ SALVANDO...");

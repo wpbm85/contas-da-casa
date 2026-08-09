@@ -1,6 +1,6 @@
-const CACHE="contas-pwa-v20";
+const CACHE="contas-pwa-v21";
 const BASE=new URL("./",self.location.href);
-const ASSETS=["","index.html","styles.css?v=100","app.js?v=100","history.js?v=100","manifest.webmanifest","icon-192.png","icon-512.png"].map(x=>new URL(x,BASE).href);
+const ASSETS=["","index.html","styles.css?v=102","app.js?v=102","history.js?v=102","manifest.webmanifest","icon-192.png","icon-512.png"].map(x=>new URL(x,BASE).href);
 
 self.addEventListener("install",event=>{
   event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(ASSETS)).then(()=>self.skipWaiting()));
