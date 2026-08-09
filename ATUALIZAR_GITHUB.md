@@ -1,15 +1,18 @@
-# v9.2 — diagnóstico de login
+# v9.3 — URL do Supabase corrigida
 
-- Não altera usuários nem senhas.
-- Ao falhar o login, mostra o erro real devolvido pelo Supabase:
-  código, status e mensagem.
-- Cache atualizado para v17 / arquivos ?v=92.
+Correção:
+- URL antiga incorreta:
+  https://ofkvpfsgxrojdgyvuune.supabase.co
+- URL correta:
+  https://ofkvpfsgxrojdygvuune.supabase.co
+
+Essa diferença fazia o navegador retornar DNS_PROBE_FINISHED_NXDOMAIN e o login falhar com AuthRetryableFetchError / Failed to fetch.
 
 Atualização:
 1. GitHub > Add file > Upload files.
-2. Envie todos os arquivos.
-3. Commit sugerido: `Diagnóstico login Supabase v9.2`.
-4. Aguarde o Pages atualizar.
-5. Tente o login uma vez e copie a mensagem exibida.
+2. Suba todos os arquivos deste pacote.
+3. Commit sugerido: `Corrige URL Supabase v9.3`.
+4. Aguarde o GitHub Pages atualizar.
+5. Abra o app e teste o login normal.
 
-Não faça reset de senha antes desse teste.
+Não é necessário resetar senha.
