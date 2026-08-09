@@ -1,18 +1,15 @@
-# Atualização v8.1
+# v9.2 — diagnóstico de login
 
-Mudanças:
-- Filtro WILLIAM mostra:
-  - despesas do grupo WILLIAM;
-  - receitas recebidas por W;
-  - lançamentos TERCEIROS no cartão W.
-- Filtro CAROL faz o equivalente para C.
-- CSV usa padrão brasileiro:
-  - separador de colunas: ponto e vírgula;
-  - decimais: vírgula;
-  - números inteiros saem sem casas decimais (ex.: 290 em vez de 290,00).
+- Não altera usuários nem senhas.
+- Ao falhar o login, mostra o erro real devolvido pelo Supabase:
+  código, status e mensagem.
+- Cache atualizado para v17 / arquivos ?v=92.
 
-Atualização no GitHub:
-1. Add file > Upload files.
-2. Suba todos os arquivos deste pacote.
-3. Commit sugerido: `Filtro W C e export pt-BR v8.1`.
+Atualização:
+1. GitHub > Add file > Upload files.
+2. Envie todos os arquivos.
+3. Commit sugerido: `Diagnóstico login Supabase v9.2`.
 4. Aguarde o Pages atualizar.
+5. Tente o login uma vez e copie a mensagem exibida.
+
+Não faça reset de senha antes desse teste.

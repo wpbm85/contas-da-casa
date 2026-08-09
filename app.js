@@ -174,7 +174,34 @@ function exportCurrentMonth(){const key=mkey(current),rows=loadNorm().filter(x=>
 $("#exportMonth").onclick=exportCurrentMonth;
 
 
-$("#loginForm").onsubmit=async e=>{e.preventDefault();$("#loginError").classList.add("hidden");const {error}=await db.auth.signInWithPassword({email:$("#loginEmail").value.trim(),password:$("#loginPassword").value});if(error){$("#loginError").textContent="Não foi possível entrar. Confira e-mail e senha.";$("#loginError").classList.remove("hidden")}};
+$("#loginForm").onsubmit=async e=>{
+ e.preventDefault();
+ const box=$("#loginError");
+ box.classList.add("hidden");
+ box.textContent="";
+ const email=$("#loginEmail").value.trim();
+ const password=$("#loginPassword").value;
+ try{
+   const {data,error}=await db.auth.signInWithPassword({email,password});
+   if(error){
+     console.error("Supabase login error:",error);
+     const code=error.code||error.name||"sem_codigo";
+     const status=error.status||"sem_status";
+     const message=error.message||String(error);
+     box.innerHTML=`<strong>LOGIN NÃO REALIZADO</strong><br>Código: ${code}<br>Status: ${status}<br>Mensagem: ${message}`;
+     box.classList.remove("hidden");
+     return;
+   }
+   if(!data?.session){
+     box.innerHTML="<strong>LOGIN SEM SESSÃO</strong><br>O Supabase não retornou uma sessão autenticada.";
+     box.classList.remove("hidden");
+   }
+ }catch(err){
+   console.error("Falha inesperada no login:",err);
+   box.innerHTML=`<strong>ERRO INESPERADO</strong><br>${err?.message||String(err)}`;
+   box.classList.remove("hidden");
+ }
+};
 $("#logoutBtn").onclick=()=>db.auth.signOut();
 
 function checkMigration(){
