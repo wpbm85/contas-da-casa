@@ -42,3 +42,9 @@ dialog{width:min(94vw,520px);border:0;border-radius:18px;padding:0;box-shadow:0 
 body:not(.authenticated) header,body:not(.authenticated) main,body:not(.authenticated) .fab{visibility:hidden}
 body.authenticated .auth-screen{display:none!important}
 @media(max-width:520px){.sync-bar{top:72px;gap:8px;justify-content:space-between}.migration-banner{margin:8px 10px 0;flex-direction:column;align-items:stretch}.migration-actions>*{flex:1}}
+
+.split-pay-title{font-size:10px;font-weight:900;letter-spacing:.08em;margin:5px 0 3px;color:var(--brand)}
+.split-pay-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.split-pay-note{font-size:10px;color:var(--muted);margin-top:8px}
+.split-badge{display:inline-block;margin-left:5px;padding:2px 5px;border-radius:5px;background:#eef6fb;color:#245c82;font-size:9px;font-weight:850}
+@media(max-width:600px){.split-pay-grid{grid-template-columns:1fr 1fr}.split-pay-grid label:last-child{grid-column:1/-1}}

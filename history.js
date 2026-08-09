@@ -1,2 +1,2 @@
-// Arquivo público: nenhum dado financeiro pessoal é embutido no código.
+// Histórico financeiro é carregado do Supabase após autenticação.
 const HISTORICAL_2026 = {};

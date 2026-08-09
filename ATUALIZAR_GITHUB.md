@@ -1,18 +1,22 @@
-# v9.3 — URL do Supabase corrigida
+# CONTAS DA CASA — v10 FINAL
 
-Correção:
-- URL antiga incorreta:
-  https://ofkvpfsgxrojdgyvuune.supabase.co
-- URL correta:
-  https://ofkvpfsgxrojdygvuune.supabase.co
+ORDEM RECOMENDADA:
 
-Essa diferença fazia o navegador retornar DNS_PROBE_FINISHED_NXDOMAIN e o login falhar com AuthRetryableFetchError / Failed to fetch.
+1. SUPABASE
+   - abra SQL Editor;
+   - cole e execute o arquivo `SUPABASE_V10_ATUALIZAR_E_IMPORTAR_HISTORICO.sql`;
+   - confirme que a consulta final retorna JAN a JUL/2026.
 
-Atualização:
-1. GitHub > Add file > Upload files.
-2. Suba todos os arquivos deste pacote.
-3. Commit sugerido: `Corrige URL Supabase v9.3`.
-4. Aguarde o GitHub Pages atualizar.
-5. Abra o app e teste o login normal.
+2. GITHUB
+   - Add file > Upload files;
+   - envie TODOS os arquivos do ZIP da v10;
+   - commit sugerido: `Pagamento dividido e histórico privado v10`.
 
-Não é necessário resetar senha.
+3. TESTE
+   - entre normalmente no app;
+   - navegue JAN–JUL/2026 e confira histórico/gráficos;
+   - crie um lançamento de R$ 300 com W=100 e C=200;
+   - confira TOTAL FAMÍLIA, acerto e FATURA;
+   - teste no segundo aparelho.
+
+O histórico não é publicado no GitHub: está apenas no SQL de importação e depois no banco privado.

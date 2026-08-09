@@ -6,7 +6,7 @@ const SUPABASE_URL="https://ofkvpfsgxrojdygvuune.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY="sb_publishable_vsd_A1GKv9Fr1Gubf8fJaw_XHHywBRM";
 const db=supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
 const KEY="contas_pwa_transactions_v1";
-let remoteRows=[],currentUser=null,realtimeChannel=null;
+let remoteRows=[],historicalData={},currentUser=null,realtimeChannel=null;
 let current=new Date(); current.setDate(1); let editingId=null;
 
 const $=s=>document.querySelector(s);
@@ -21,21 +21,49 @@ const monthsBetween=(start,end)=>{let s=new Date(start+"T12:00:00"),[y,m]=end.sp
 function normalizeLegacy(x){
  if(x.group==="INDIVIDUAL"){x.group=x.owner==="C"?"CAROL":"WILLIAM";delete x.owner}
  if(!x.entryType)x.entryType="EXPENSE";
+ if(!x.paymentSplit)x.paymentSplit=null;
  return x;
 }
 function loadNorm(){return load().map(x=>normalizeLegacy({...x}))}
 function dbToApp(r){
- return {id:r.id,purchaseId:r.purchase_id,entryType:r.entry_type,description:r.description||"",group:r.grupo,category:r.categoria,paidBy:r.paid_by,payment:r.payment==="CASH"?"$":r.payment,card:r.card,incomeCategory:r.income_category,receivedBy:r.received_by,amount:Number(r.amount),date:r.data,competence:r.competence,installmentLabel:r.installment_label,recurringLabel:r.recurring_label};
+ return {id:r.id,purchaseId:r.purchase_id,entryType:r.entry_type,description:r.description||"",group:r.grupo,category:r.categoria,paidBy:r.paid_by,payment:r.payment==="CASH"?"$":r.payment,card:r.card,paymentSplit:r.payment_split||null,incomeCategory:r.income_category,receivedBy:r.received_by,amount:Number(r.amount),date:r.data,competence:r.competence,installmentLabel:r.installment_label,recurringLabel:r.recurring_label};
 }
 function appToDb(x){
- return {id:x.id,entry_type:x.entryType,description:x.description||null,grupo:x.entryType==="EXPENSE"?x.group:null,categoria:x.entryType==="EXPENSE"?x.category:null,paid_by:x.entryType==="EXPENSE"?x.paidBy:null,payment:x.entryType==="EXPENSE"?(x.payment==="$"?"CASH":x.payment):(x.entryType==="THIRD_PARTY"?"CARD":null),card:((x.entryType==="EXPENSE"&&x.payment==="CARD")||x.entryType==="THIRD_PARTY")?x.card:null,income_category:x.entryType==="INCOME"?x.incomeCategory:null,received_by:x.entryType==="INCOME"?x.receivedBy:null,amount:Number(x.amount),data:x.date,competence:x.competence,purchase_id:x.purchaseId||null,installment_label:x.installmentLabel||null,recurring_label:x.recurringLabel||null};
+ const split=x.entryType==="EXPENSE"&&x.paymentSplit?x.paymentSplit:null;
+ return {id:x.id,entry_type:x.entryType,description:x.description||null,grupo:x.entryType==="EXPENSE"?x.group:null,categoria:x.entryType==="EXPENSE"?x.category:null,paid_by:x.entryType==="EXPENSE"&&!split?x.paidBy:null,payment:x.entryType==="EXPENSE"&&!split?(x.payment==="$"?"CASH":x.payment):(x.entryType==="THIRD_PARTY"?"CARD":null),card:(x.entryType==="EXPENSE"&&!split&&x.payment==="CARD")||x.entryType==="THIRD_PARTY"?x.card:null,payment_split:split,income_category:x.entryType==="INCOME"?x.incomeCategory:null,received_by:x.entryType==="INCOME"?x.receivedBy:null,amount:Number(x.amount),data:x.date,competence:x.competence,purchase_id:x.purchaseId||null,installment_label:x.installmentLabel||null,recurring_label:x.recurringLabel||null};
+}
+function hasSplit(x){return !!(x?.paymentSplit?.W||x?.paymentSplit?.C)}
+function paidW(x){return hasSplit(x)?Number(x.paymentSplit?.W?.amount||0):(x.paidBy==="W"?Number(x.amount):0)}
+function paidC(x){return hasSplit(x)?Number(x.paymentSplit?.C?.amount||0):(x.paidBy==="C"?Number(x.amount):0)}
+function cardPart(x,card){
+ if(hasSplit(x)){
+   let total=0;
+   for(const p of ["W","C"]){
+     const part=x.paymentSplit?.[p];
+     if(part&&part.payment==="CARD"&&part.card===card)total+=Number(part.amount||0);
+   }
+   return total;
+ }
+ return x.payment==="CARD"&&x.card===card?Number(x.amount):0;
+}
+function splitMeta(x){
+ if(!hasSplit(x))return "";
+ const fmt=(who)=>{const p=x.paymentSplit?.[who];if(!p||!Number(p.amount))return null;const method=p.payment==="CARD"?`💳 ${p.card}`:"$ CASH";return `${who} ${money(Number(p.amount))} (${method})`};
+ return [fmt("W"),fmt("C")].filter(Boolean).join(" · ");
 }
 function setSync(t){const el=$("#syncStatus");if(el)el.textContent=t}
 async function refreshRemote(){
  setSync("☁️ SINCRONIZANDO...");
- const {data,error}=await db.from("lancamentos").select("*").order("data",{ascending:true});
- if(error){console.error(error);setSync("⚠️ ERRO");return false}
- remoteRows=(data||[]).map(dbToApp);setSync("☁️ SINCRONIZADO");render();checkMigration();return true;
+ const [launchRes,histRes]=await Promise.all([
+   db.from("lancamentos").select("*").order("data",{ascending:true}),
+   db.from("historico_mensal").select("competence,payload").order("competence",{ascending:true})
+ ]);
+ if(launchRes.error){console.error(launchRes.error);setSync("⚠️ ERRO");return false}
+ if(histRes.error){console.error(histRes.error);setSync("⚠️ HISTÓRICO NÃO CARREGADO");return false}
+ remoteRows=(launchRes.data||[]).map(dbToApp);
+ historicalData={};
+ for(const r of (histRes.data||[]))historicalData[r.competence]=r.payload;
+ setSync("☁️ SINCRONIZADO");render();checkMigration();return true;
 }
 function subscribeRealtime(){
  if(realtimeChannel)db.removeChannel(realtimeChannel);
@@ -44,33 +72,54 @@ function subscribeRealtime(){
 function liveForMonth(key){return loadNorm().filter(x=>x.competence===key)}
 
 function buildMonth(key){
- const hist=HISTORICAL_2026[key]||null,live=liveForMonth(key),sum=a=>a.reduce((s,x)=>s+Number(x.amount),0);
+ const hist=historicalData[key]||null,live=liveForMonth(key),sum=a=>a.reduce((s,x)=>s+Number(x.amount),0);
  const expenses=live.filter(x=>x.entryType==="EXPENSE"),incomes=live.filter(x=>x.entryType==="INCOME"),thirdParty=live.filter(x=>x.entryType==="THIRD_PARTY");
  const famLive=expenses.filter(x=>["CONTAS","ALICE","CASAL"].includes(x.group));
- const family={total:(hist?.family.total||0)+sum(famLive),W:(hist?.family.W||0)+sum(famLive.filter(x=>x.paidBy==="W")),C:(hist?.family.C||0)+sum(famLive.filter(x=>x.paidBy==="C"))};
- const ownCardW=(hist?.cards.W||0)+sum(expenses.filter(x=>x.payment==="CARD"&&x.card==="W")),ownCardC=(hist?.cards.C||0)+sum(expenses.filter(x=>x.payment==="CARD"&&x.card==="C"));
+
+ const family={
+   total:(hist?.family?.total||0)+sum(famLive),
+   W:(hist?.family?.W||0)+famLive.reduce((s,x)=>s+paidW(x),0),
+   C:(hist?.family?.C||0)+famLive.reduce((s,x)=>s+paidC(x),0)
+ };
+
+ const ownCardW=(hist?.cards?.W||0)+expenses.reduce((s,x)=>s+cardPart(x,"W"),0);
+ const ownCardC=(hist?.cards?.C||0)+expenses.reduce((s,x)=>s+cardPart(x,"C"),0);
  const thirdW=sum(thirdParty.filter(x=>x.card==="W")),thirdC=sum(thirdParty.filter(x=>x.card==="C"));
  const cards={W:ownCardW+thirdW,C:ownCardC+thirdC,ownW:ownCardW,ownC:ownCardC,thirdW,thirdC};
- const groups={};
- ["CONTAS","ALICE","CASAL","WILLIAM","CAROL"].forEach(g=>{let h=hist?.groups[g]||{W:0,C:0,total:0},gl=expenses.filter(x=>x.group===g);groups[g]={W:h.W+sum(gl.filter(x=>x.paidBy==="W")),C:h.C+sum(gl.filter(x=>x.paidBy==="C")),total:h.total+sum(gl)}});
- const familyNet=(family.W-family.C)/2,williamPaidByCarol=sum(expenses.filter(x=>x.group==="WILLIAM"&&x.paidBy==="C")),carolPaidByWilliam=sum(expenses.filter(x=>x.group==="CAROL"&&x.paidBy==="W"));
- const williamReceives=familyNet+carolPaidByWilliam-williamPaidByCarol;
- const cmap=new Map();
- (hist?.categories||[]).forEach(c=>{let v=cmap.get(c.category)||{category:c.category,total:0,groups:new Set()};v.total+=c.total;v.groups.add(c.group);cmap.set(c.category,v)});
- expenses.forEach(x=>{let v=cmap.get(x.category)||{category:x.category,total:0,groups:new Set()};v.total+=Number(x.amount);v.groups.add(x.group);cmap.set(x.category,v)});
- const incomeW=sum(incomes.filter(x=>x.receivedBy==="W")),incomeC=sum(incomes.filter(x=>x.receivedBy==="C")),incomeMap=new Map();
- incomes.forEach(x=>{let k=x.incomeCategory||"OUTROS";incomeMap.set(k,(incomeMap.get(k)||0)+Number(x.amount))});
- const totalExpenses=family.total+groups.WILLIAM.total+groups.CAROL.total;
- return {hist,live,expenses,incomes,thirdParty,family,cards,groups,williamReceives,categories:[...cmap.values()].sort((a,b)=>b.total-a.total),income:{W:incomeW,C:incomeC,total:incomeW+incomeC,byCategory:[...incomeMap.entries()].sort((a,b)=>b[1]-a[1])},totalExpenses};
-}
 
+ const groups={};
+ ["CONTAS","ALICE","CASAL","WILLIAM","CAROL"].forEach(g=>{
+   const h=hist?.groups?.[g]||{W:0,C:0,total:0},gl=expenses.filter(x=>x.group===g);
+   groups[g]={W:Number(h.W||0)+gl.reduce((s,x)=>s+paidW(x),0),C:Number(h.C||0)+gl.reduce((s,x)=>s+paidC(x),0),total:Number(h.total||0)+sum(gl)};
+ });
+
+ const familyNet=(family.W-family.C)/2;
+ const williamPaidByCarol=expenses.filter(x=>x.group==="WILLIAM").reduce((s,x)=>s+paidC(x),0);
+ const carolPaidByWilliam=expenses.filter(x=>x.group==="CAROL").reduce((s,x)=>s+paidW(x),0);
+ const williamReceives=familyNet+carolPaidByWilliam-williamPaidByCarol;
+
+ const cmap=new Map();
+ (hist?.categories||[]).forEach(c=>{let v=cmap.get(c.category)||{category:c.category,total:0,groups:new Set()};v.total+=Number(c.total||0);v.groups.add(c.group);cmap.set(c.category,v)});
+ expenses.forEach(x=>{let v=cmap.get(x.category)||{category:x.category,total:0,groups:new Set()};v.total+=Number(x.amount);v.groups.add(x.group);cmap.set(x.category,v)});
+
+ const histIncomeW=Number(hist?.income?.W||0),histIncomeC=Number(hist?.income?.C||0);
+ const liveIncomeW=sum(incomes.filter(x=>x.receivedBy==="W")),liveIncomeC=sum(incomes.filter(x=>x.receivedBy==="C"));
+ const incomeMap=new Map();
+ (hist?.income?.byCategory||[]).forEach(([k,v])=>incomeMap.set(k,(incomeMap.get(k)||0)+Number(v||0)));
+ incomes.forEach(x=>{let k=x.incomeCategory||"OUTROS";incomeMap.set(k,(incomeMap.get(k)||0)+Number(x.amount))});
+ const salaryW=Number(hist?.income?.salaryW||0)+incomes.filter(x=>x.receivedBy==="W"&&x.incomeCategory==="SALARIO").reduce((s,x)=>s+Number(x.amount),0);
+ const salaryC=Number(hist?.income?.salaryC||0)+incomes.filter(x=>x.receivedBy==="C"&&x.incomeCategory==="SALARIO").reduce((s,x)=>s+Number(x.amount),0);
+
+ const totalExpenses=family.total+groups.WILLIAM.total+groups.CAROL.total;
+ return {hist,live,expenses,incomes,thirdParty,family,cards,groups,williamReceives,categories:[...cmap.values()].sort((a,b)=>b.total-a.total),income:{W:histIncomeW+liveIncomeW,C:histIncomeC+liveIncomeC,total:histIncomeW+histIncomeC+liveIncomeW+liveIncomeC,salaryW,salaryC,byCategory:[...incomeMap.entries()].sort((a,b)=>b[1]-a[1])},totalExpenses};
+}
 function chartValue(key,filter){
  const d=buildMonth(key);
  if(filter==="FAMILY")return d.family.total;
  if(filter==="CARDS")return d.cards.W+d.cards.C;
  if(filter==="INCOME")return d.income.total;
- if(filter==="SALARY_W")return d.incomes.filter(x=>x.receivedBy==="W"&&x.incomeCategory==="SALARIO").reduce((s,x)=>s+Number(x.amount),0);
- if(filter==="SALARY_C")return d.incomes.filter(x=>x.receivedBy==="C"&&x.incomeCategory==="SALARIO").reduce((s,x)=>s+Number(x.amount),0);
+ if(filter==="SALARY_W")return d.income.salaryW;
+ if(filter==="SALARY_C")return d.income.salaryC;
  if(filter==="NET")return d.income.total-d.totalExpenses;
  return d.groups[filter]?.total||0;
 }
@@ -103,7 +152,27 @@ function render(){
    if(filter==="CAROL") return (x.entryType==="EXPENSE"&&x.group==="CAROL") || (x.entryType==="INCOME"&&x.receivedBy==="C") || (x.entryType==="THIRD_PARTY"&&x.card==="C");
    return x.entryType==="EXPENSE"&&x.group===filter;
  }).sort((a,b)=>b.date.localeCompare(a.date));
- $("#transactions").innerHTML=shown.length?shown.map(x=>{const inc=x.entryType==="INCOME",third=x.entryType==="THIRD_PARTY",icon=inc?"💵":third?"🤝":(ICONS[x.category]||"📌"),meta=inc?`RECEITA · ${incomeNames[x.incomeCategory]||x.incomeCategory} · ${x.date.split("-").reverse().join("/")} · RECEBIDO POR ${x.receivedBy}`:third?`TERCEIROS · ${x.date.split("-").reverse().join("/")} · 💳 ${x.card}`:`${GROUP_ICON[x.group]} ${x.group} · ${x.category} · ${x.date.split("-").reverse().join("/")} · PAGO POR ${x.paidBy} · ${x.payment==="CARD"?"💳 "+x.card:"$ CASH"}${x.installmentLabel?" · "+x.installmentLabel:""}${x.recurringLabel?" · 🔁 "+x.recurringLabel:""}`;return `<div class="tx"><div><strong>${icon} ${x.description}</strong><div class="meta">${meta}</div></div><div class="amount">${money(Number(x.amount))}<div class="tx-actions"><button class="action-btn action-edit" data-edit="${x.id}">✏ EDITAR</button><button class="action-btn action-delete" data-del="${x.id}">🗑 EXCLUIR</button></div></div></div>`}).join(""):`<div class="mini">SEM LANÇAMENTOS NESTE MÊS.</div>`;
+ if(shown.length){
+   $("#transactions").innerHTML=shown.map(x=>{
+     const inc=x.entryType==="INCOME";
+     const third=x.entryType==="THIRD_PARTY";
+     const icon=inc?"💵":third?"🤝":(ICONS[x.category]||"📌");
+     let meta="";
+     if(inc){
+       meta=`RECEITA · ${incomeNames[x.incomeCategory]||x.incomeCategory} · ${x.date.split("-").reverse().join("/")} · RECEBIDO POR ${x.receivedBy}`;
+     }else if(third){
+       meta=`TERCEIROS · ${x.date.split("-").reverse().join("/")} · 💳 ${x.card}`;
+     }else{
+       const paymentText=hasSplit(x)
+         ? `✂️ ${splitMeta(x)}`
+         : `PAGO POR ${x.paidBy} · ${x.payment==="CARD"?"💳 "+x.card:"$ CASH"}`;
+       meta=`${GROUP_ICON[x.group]} ${x.group} · ${x.category} · ${x.date.split("-").reverse().join("/")} · ${paymentText}${x.installmentLabel?" · "+x.installmentLabel:""}${x.recurringLabel?" · 🔁 "+x.recurringLabel:""}`;
+     }
+     return `<div class="tx"><div><strong>${icon} ${x.description}</strong><div class="meta">${meta}</div></div><div class="amount">${money(Number(x.amount))}<div class="tx-actions"><button class="action-btn action-edit" data-edit="${x.id}">✏ EDITAR</button><button class="action-btn action-delete" data-del="${x.id}">🗑 EXCLUIR</button></div></div></div>`;
+   }).join("");
+ }else{
+   $("#transactions").innerHTML='<div class="mini">SEM LANÇAMENTOS NESTE MÊS.</div>';
+ }
  document.querySelectorAll("[data-edit]").forEach(b=>b.onclick=()=>openEdit(b.dataset.edit));document.querySelectorAll("[data-del]").forEach(b=>b.onclick=async()=>{if(!confirm("Excluir este lançamento?"))return;setSync("☁️ SALVANDO...");const {error}=await db.from("lancamentos").delete().eq("id",b.dataset.del);if(error){alert("Erro ao excluir: "+error.message);setSync("⚠️ ERRO");return}await refreshRemote()});
  renderChart();
 }
@@ -115,16 +184,37 @@ function orderedCategories(group){
 function updateCategories(){let g=$("#group").value,ordered=orderedCategories(g);$("#category").innerHTML=ordered.map(c=>`<option value="${c}">${ICONS[c]||"📌"} ${c}</option>`).join("");if(g==="CASAL")$("#category").value="RESTAURANTES"}
 function updatePayment(){$("#cardFields").classList.toggle("hidden",$("#payment").value!=="CARD")}
 function updateRecurring(){$("#recurringFields").classList.toggle("hidden",!$("#recurring").checked)}
-function updateEntryType(){const type=$("#entryType").value,inc=type==="INCOME",third=type==="THIRD_PARTY";$("#groupLabel").classList.toggle("hidden",inc||third);$("#categoryLabel").classList.toggle("hidden",inc||third);$("#incomeFields").classList.toggle("hidden",!inc);$("#expensePaymentFields").classList.toggle("hidden",inc||third);$("#thirdPartyNote").classList.toggle("hidden",!third);$("#recurring").closest("label").classList.toggle("hidden",inc||third);if(inc)$("#cardFields").classList.add("hidden");else if(third)$("#cardFields").classList.remove("hidden");else updatePayment()}
-
+function updateSplitPayment(){
+ const split=$("#splitPayment").checked&&$("#entryType").value==="EXPENSE";
+ $("#splitPaymentFields").classList.toggle("hidden",!split);
+ $("#expensePaymentFields").classList.toggle("hidden",split||$("#entryType").value!=="EXPENSE");
+ if(split){
+   $("#cardFields").classList.add("hidden");
+   $("#recurring").checked=false;$("#recurringFields").classList.add("hidden");
+ }
+ $("#splitCardWLabel").classList.toggle("hidden",$("#splitPaymentW").value!=="CARD");
+ $("#splitCardCLabel").classList.toggle("hidden",$("#splitPaymentC").value!=="CARD");
+}
+function updateEntryType(){
+ const type=$("#entryType").value,inc=type==="INCOME",third=type==="THIRD_PARTY",expense=type==="EXPENSE";
+ $("#groupLabel").classList.toggle("hidden",inc||third);
+ $("#categoryLabel").classList.toggle("hidden",inc||third);
+ $("#incomeFields").classList.toggle("hidden",!inc);
+ $("#thirdPartyNote").classList.toggle("hidden",!third);
+ $("#splitPaymentToggle").classList.toggle("hidden",!expense);
+ $("#recurring").closest("label").classList.toggle("hidden",inc||third||($("#splitPayment").checked&&expense));
+ if(inc)$("#cardFields").classList.add("hidden");
+ else if(third){$("#splitPayment").checked=false;$("#expensePaymentFields").classList.add("hidden");$("#cardFields").classList.remove("hidden")}
+ else {updatePayment();updateSplitPayment()}
+}
 function openEdit(id){
  const x=loadNorm().find(t=>t.id===id);if(!x)return;editingId=id;$("#expenseForm").reset();$("#expenseDialogTitle").textContent="✏️ EDITAR LANÇAMENTO";$("#editHint").classList.remove("hidden");$("#entryType").value=x.entryType||"EXPENSE";$("#amount").value=x.amount;$("#description").value=(x.description===x.category?"":x.description);$("#date").value=x.date;
- if(x.entryType==="INCOME"){$("#incomeCategory").value=x.incomeCategory||"OUTROS";$("#receivedBy").value=x.receivedBy||"W"}else if(x.entryType==="THIRD_PARTY"){$("#card").value=x.card||"W"}else{$("#group").value=x.group;updateCategories();$("#category").value=x.category;$("#paidBy").value=x.paidBy;$("#payment").value=x.payment;if(x.payment==="CARD")$("#card").value=x.card||"W"}
+ if(x.entryType==="INCOME"){$("#incomeCategory").value=x.incomeCategory||"OUTROS";$("#receivedBy").value=x.receivedBy||"W"}else if(x.entryType==="THIRD_PARTY"){$("#card").value=x.card||"W"}else{$("#group").value=x.group;updateCategories();$("#category").value=x.category;if(hasSplit(x)){$("#splitPayment").checked=true;$("#splitAmountW").value=x.paymentSplit?.W?.amount||"";$("#splitAmountC").value=x.paymentSplit?.C?.amount||"";$("#splitPaymentW").value=x.paymentSplit?.W?.payment||"CARD";$("#splitPaymentC").value=x.paymentSplit?.C?.payment||"CARD";$("#splitCardW").value=x.paymentSplit?.W?.card||"W";$("#splitCardC").value=x.paymentSplit?.C?.card||"C"}else{$("#splitPayment").checked=false;$("#paidBy").value=x.paidBy;$("#payment").value=x.payment;if(x.payment==="CARD")$("#card").value=x.card||"W"}}
  $("#installments").value=1;$("#recurring").checked=false;updateRecurring();updateEntryType();$("#expenseDialog").showModal();
 }
 
-$("#fab").onclick=()=>{editingId=null;$("#expenseForm").reset();$("#expenseDialogTitle").textContent="➕ NOVO LANÇAMENTO";$("#editHint").classList.add("hidden");$("#entryType").value="EXPENSE";$("#date").value=new Date().toISOString().slice(0,10);$("#group").value="CASAL";$("#payment").value="CARD";$("#installments").value=1;let d=new Date();d.setMonth(d.getMonth()+11);$("#recurringUntil").value=mkey(d);updateCategories();updatePayment();updateRecurring();updateEntryType();$("#expenseDialog").showModal()};
-$("#closeDialog").onclick=()=>$("#expenseDialog").close();$("#entryType").onchange=updateEntryType;$("#group").onchange=updateCategories;$("#payment").onchange=updatePayment;$("#recurring").onchange=updateRecurring;$("#filterGroup").onchange=render;$("#chartFilter").onchange=renderChart;$("#prevMonth").onclick=()=>{current.setMonth(current.getMonth()-1);render()};$("#nextMonth").onclick=()=>{current.setMonth(current.getMonth()+1);render()};
+$("#fab").onclick=()=>{editingId=null;$("#expenseForm").reset();$("#expenseDialogTitle").textContent="➕ NOVO LANÇAMENTO";$("#editHint").classList.add("hidden");$("#entryType").value="EXPENSE";$("#splitPayment").checked=false;$("#splitAmountW").value="";$("#splitAmountC").value="";$("#date").value=new Date().toISOString().slice(0,10);$("#group").value="CASAL";$("#payment").value="CARD";$("#installments").value=1;let d=new Date();d.setMonth(d.getMonth()+11);$("#recurringUntil").value=mkey(d);updateCategories();updatePayment();updateRecurring();updateEntryType();updateSplitPayment();$("#expenseDialog").showModal()};
+$("#closeDialog").onclick=()=>$("#expenseDialog").close();$("#entryType").onchange=updateEntryType;$("#splitPayment").onchange=()=>{updateSplitPayment();updateEntryType()};$("#splitPaymentW").onchange=updateSplitPayment;$("#splitPaymentC").onchange=updateSplitPayment;$("#group").onchange=updateCategories;$("#payment").onchange=updatePayment;$("#recurring").onchange=updateRecurring;$("#filterGroup").onchange=render;$("#chartFilter").onchange=renderChart;$("#prevMonth").onclick=()=>{current.setMonth(current.getMonth()-1);render()};$("#nextMonth").onclick=()=>{current.setMonth(current.getMonth()+1);render()};
 
 $("#expenseForm").onsubmit=async e=>{
  e.preventDefault();
@@ -136,7 +226,15 @@ $("#expenseForm").onsubmit=async e=>{
    let u={...old,entryType:type,amount:total,date,competence:date.slice(0,7)};
    if(type==="INCOME")u={...u,description:$("#description").value.trim()||$("#incomeCategory").value,incomeCategory:$("#incomeCategory").value,receivedBy:$("#receivedBy").value,group:null,category:null,paidBy:null,payment:null,card:null,installmentLabel:null,recurringLabel:null};
    else if(type==="THIRD_PARTY")u={...u,description:$("#description").value.trim()||"TERCEIROS",card:$("#card").value,group:null,category:null,paidBy:null,payment:"CARD",incomeCategory:null,receivedBy:null,installmentLabel:null,recurringLabel:null};
-   else u={...u,description:$("#description").value.trim()||$("#category").value,group:$("#group").value,category:$("#category").value,paidBy:$("#paidBy").value,payment:$("#payment").value,card:$("#payment").value==="CARD"?$("#card").value:null,incomeCategory:null,receivedBy:null};
+   else{
+     let paymentSplit=null;
+     if($("#splitPayment").checked){
+       const w=Number($("#splitAmountW").value||0),c=Number($("#splitAmountC").value||0);
+       if(w<=0||c<=0||Math.abs((w+c)-total)>.009){alert("NO PAGAMENTO DIVIDIDO, INFORME VALORES POSITIVOS PARA W E C E FAÇA A SOMA BATER COM O VALOR TOTAL.");return}
+       paymentSplit={W:{amount:w,payment:$("#splitPaymentW").value,card:$("#splitPaymentW").value==="CARD"?$("#splitCardW").value:null},C:{amount:c,payment:$("#splitPaymentC").value,card:$("#splitPaymentC").value==="CARD"?$("#splitCardC").value:null}};
+     }
+     u={...u,description:$("#description").value.trim()||$("#category").value,group:$("#group").value,category:$("#category").value,paymentSplit,paidBy:paymentSplit?null:$("#paidBy").value,payment:paymentSplit?null:$("#payment").value,card:paymentSplit?null:($("#payment").value==="CARD"?$("#card").value:null),incomeCategory:null,receivedBy:null};
+   }
    const payload=appToDb(u);delete payload.id;
    setSync("☁️ SALVANDO...");
    const {error}=await db.from("lancamentos").update(payload).eq("id",editingId);
@@ -147,10 +245,17 @@ $("#expenseForm").onsubmit=async e=>{
  if(type==="INCOME")records=[{id:crypto.randomUUID(),purchaseId:crypto.randomUUID(),entryType:type,description:$("#description").value.trim()||$("#incomeCategory").value,incomeCategory:$("#incomeCategory").value,receivedBy:$("#receivedBy").value,amount:total,date,competence:date.slice(0,7)}];
  else if(type==="THIRD_PARTY")records=[{id:crypto.randomUUID(),purchaseId:crypto.randomUUID(),entryType:type,description:$("#description").value.trim()||"TERCEIROS",payment:"CARD",card:$("#card").value,amount:total,date,competence:date.slice(0,7)}];
  else{
-   const isCard=$("#payment").value==="CARD",n=isCard?Math.max(1,Number($("#installments").value||1)):1,rec=$("#recurring").checked;
+   const split=$("#splitPayment").checked;
+   let paymentSplit=null;
+   if(split){
+     const w=Number($("#splitAmountW").value||0),c=Number($("#splitAmountC").value||0);
+     if(w<=0||c<=0||Math.abs((w+c)-total)>.009){alert("NO PAGAMENTO DIVIDIDO, INFORME VALORES POSITIVOS PARA W E C E FAÇA A SOMA BATER COM O VALOR TOTAL.");return}
+     paymentSplit={W:{amount:w,payment:$("#splitPaymentW").value,card:$("#splitPaymentW").value==="CARD"?$("#splitCardW").value:null},C:{amount:c,payment:$("#splitPaymentC").value,card:$("#splitPaymentC").value==="CARD"?$("#splitCardC").value:null}};
+   }
+   const isCard=!split&&$("#payment").value==="CARD",n=split?1:(isCard?Math.max(1,Number($("#installments").value||1)):1),rec=split?false:$("#recurring").checked;
    if(rec&&isCard&&n>1){alert("USE PARCELAMENTO OU RECORRÊNCIA, NÃO OS DOIS.");return}
    if(rec&&!$("#recurringUntil").value){alert("INFORME ATÉ QUANDO REPETIR.");return}
-   const base={purchaseId:crypto.randomUUID(),entryType:"EXPENSE",description:$("#description").value.trim()||$("#category").value,group:$("#group").value,category:$("#category").value,paidBy:$("#paidBy").value,payment:$("#payment").value,card:isCard?$("#card").value:null},reps=rec?monthsBetween(date,$("#recurringUntil").value):n,cents=Math.round(total*100);
+   const base={purchaseId:crypto.randomUUID(),entryType:"EXPENSE",description:$("#description").value.trim()||$("#category").value,group:$("#group").value,category:$("#category").value,paymentSplit,paidBy:split?null:$("#paidBy").value,payment:split?null:$("#payment").value,card:isCard?$("#card").value:null},reps=rec?monthsBetween(date,$("#recurringUntil").value):n,cents=Math.round(total*100);
    for(let i=0;i<reps;i++){let d=addMonths(date,i),amount=total,installmentLabel=null,recurringLabel=null;if(!rec&&n>1){let each=Math.floor(cents/n),rem=cents-each*n;amount=(each+(i<rem?1:0))/100;installmentLabel=`${i+1}/${n}`}if(rec)recurringLabel=`MENSAL ${i+1}/${reps}`;records.push({...base,id:crypto.randomUUID(),date:d,competence:d.slice(0,7),amount,installmentLabel,recurringLabel})}
  }
  setSync("☁️ SALVANDO...");
@@ -165,11 +270,46 @@ function ptDecimal(n){
  if(Number.isInteger(v)) return String(v);
  return v.toFixed(2).replace(".",",");
 }
-function exportCurrentMonth(){const key=mkey(current),rows=loadNorm().filter(x=>x.competence===key),expenses=rows.filter(x=>x.entryType==="EXPENSE"),incomes=rows.filter(x=>x.entryType==="INCOME"),thirds=rows.filter(x=>x.entryType==="THIRD_PARTY"),lines=[["GRUPO","CATEGORIA","W","C","TOTAL"]];let gw=0,gc=0;
- for(const group of ["CONTAS","ALICE","CASAL","WILLIAM","CAROL"])for(const category of EXPORT_ORDER[group]){const items=expenses.filter(x=>x.group===group&&x.category===category);let w=0,c=0;for(const x of items){if(group==="WILLIAM")w+=Number(x.amount);else if(group==="CAROL")c+=Number(x.amount);else if(x.paidBy==="W")w+=Number(x.amount);else c+=Number(x.amount)}gw+=w;gc+=c;lines.push([group,category,ptDecimal(w),ptDecimal(c),ptDecimal(w+c)])}
- lines.push(["TOTAL GASTOS","",ptDecimal(gw),ptDecimal(gc),ptDecimal(gw+gc)],[],["RECEITAS","CATEGORIA","W","C","TOTAL"]);const incCats=["SALARIO","BONUS","REEMBOLSO","VENDA","RESTITUICAO","OUTROS"];let iw=0,ic=0;for(const cat of incCats){let w=incomes.filter(x=>x.incomeCategory===cat&&x.receivedBy==="W").reduce((s,x)=>s+Number(x.amount),0),c=incomes.filter(x=>x.incomeCategory===cat&&x.receivedBy==="C").reduce((s,x)=>s+Number(x.amount),0);iw+=w;ic+=c;lines.push(["RECEITAS",cat,ptDecimal(w),ptDecimal(c),ptDecimal(w+c)])}
- lines.push(["TOTAL RECEITAS","",ptDecimal(iw),ptDecimal(ic),ptDecimal(iw+ic)],[]);const tw=thirds.filter(x=>x.card==="W").reduce((s,x)=>s+Number(x.amount),0),tc=thirds.filter(x=>x.card==="C").reduce((s,x)=>s+Number(x.amount),0);lines.push(["TERCEIROS","CARTÃO W","CARTÃO C","TOTAL"],["TERCEIROS",ptDecimal(tw),ptDecimal(tc),ptDecimal(tw+tc)]);
- const csv="\uFEFF"+lines.map(r=>r.map(csvCell).join(";")).join("\r\n"),blob=new Blob([csv],{type:"text/csv;charset=utf-8"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=`contas_${key}.csv`;document.body.appendChild(a);a.click();const url=a.href;a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
+function exportCurrentMonth(){
+ const key=mkey(current),d=buildMonth(key),rows=loadNorm().filter(x=>x.competence===key);
+ const expenses=rows.filter(x=>x.entryType==="EXPENSE"),incomes=rows.filter(x=>x.entryType==="INCOME"),thirds=rows.filter(x=>x.entryType==="THIRD_PARTY"),hist=d.hist;
+ const lines=[["GRUPO","CATEGORIA","W","C","TOTAL"]];let gw=0,gc=0;
+
+ for(const group of ["CONTAS","ALICE","CASAL","WILLIAM","CAROL"]){
+   for(const category of EXPORT_ORDER[group]){
+     let w=0,c=0;
+     const hc=(hist?.categories||[]).filter(x=>x.group===group&&x.category===category);
+     for(const h of hc){w+=Number(h.W||0);c+=Number(h.C||0)}
+     const items=expenses.filter(x=>x.group===group&&x.category===category);
+     for(const x of items){
+       if(group==="WILLIAM")w+=Number(x.amount);
+       else if(group==="CAROL")c+=Number(x.amount);
+       else {w+=paidW(x);c+=paidC(x)}
+     }
+     gw+=w;gc+=c;lines.push([group,category,ptDecimal(w),ptDecimal(c),ptDecimal(w+c)]);
+   }
+ }
+ lines.push(["TOTAL GASTOS","",ptDecimal(gw),ptDecimal(gc),ptDecimal(gw+gc)]);
+ lines.push([]);
+ lines.push(["FATURAS","CARTÃO W","CARTÃO C","TOTAL"]);
+ lines.push(["FATURAS",ptDecimal(d.cards.W),ptDecimal(d.cards.C),ptDecimal(d.cards.W+d.cards.C)]);
+ lines.push([]);
+ lines.push(["RECEITAS","CATEGORIA","W","C","TOTAL"]);
+ const incCats=["SALARIO","BONUS","REEMBOLSO","VENDA","RESTITUICAO","OUTROS"];
+ let iw=0,ic=0;
+ for(const cat of incCats){
+   let w=0,c=0;
+   if(cat==="SALARIO"){w+=Number(hist?.income?.salaryW||0);c+=Number(hist?.income?.salaryC||0)}
+   w+=incomes.filter(x=>x.incomeCategory===cat&&x.receivedBy==="W").reduce((s,x)=>s+Number(x.amount),0);
+   c+=incomes.filter(x=>x.incomeCategory===cat&&x.receivedBy==="C").reduce((s,x)=>s+Number(x.amount),0);
+   iw+=w;ic+=c;lines.push(["RECEITAS",cat,ptDecimal(w),ptDecimal(c),ptDecimal(w+c)]);
+ }
+ lines.push(["TOTAL RECEITAS","",ptDecimal(iw),ptDecimal(ic),ptDecimal(iw+ic)]);
+ lines.push([]);
+ const tw=thirds.filter(x=>x.card==="W").reduce((s,x)=>s+Number(x.amount),0),tc=thirds.filter(x=>x.card==="C").reduce((s,x)=>s+Number(x.amount),0);
+ lines.push(["TERCEIROS","CARTÃO W","CARTÃO C","TOTAL"],["TERCEIROS",ptDecimal(tw),ptDecimal(tc),ptDecimal(tw+tc)]);
+ const csv="\uFEFF"+lines.map(r=>r.map(csvCell).join(";")).join("\r\n"),blob=new Blob([csv],{type:"text/csv;charset=utf-8"}),a=document.createElement("a");
+ a.href=URL.createObjectURL(blob);a.download=`contas_${key}.csv`;document.body.appendChild(a);a.click();const url=a.href;a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
 $("#exportMonth").onclick=exportCurrentMonth;
 
@@ -231,4 +371,4 @@ db.auth.onAuthStateChange((event,session)=>handleSession(session));
 (async()=>{const {data:{session}}=await db.auth.getSession();await handleSession(session)})();
 
 if("serviceWorker" in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js"));
-updateCategories();updatePayment();updateRecurring();updateEntryType();
+updateCategories();updatePayment();updateRecurring();updateEntryType();updateSplitPayment();
