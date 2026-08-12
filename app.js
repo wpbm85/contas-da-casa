@@ -8,6 +8,8 @@ const db=supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
 const KEY="contas_pwa_transactions_v1";
 let remoteRows=[],historicalData={},currentUser=null,realtimeChannel=null;
 let current=new Date(); current.setDate(1); let editingId=null;
+const PERSON_NAME={W:"WILLIAM",C:"CAROL"};
+const personName=x=>PERSON_NAME[x]||x;
 
 const $=s=>document.querySelector(s);
 const money=n=>(n||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
@@ -48,7 +50,7 @@ function cardPart(x,card){
 }
 function splitMeta(x){
  if(!hasSplit(x))return "";
- const fmt=(who)=>{const p=x.paymentSplit?.[who];if(!p||!Number(p.amount))return null;const method=p.payment==="CARD"?`💳 ${p.card}`:"$ CASH";return `${who} ${money(Number(p.amount))} (${method})`};
+ const fmt=(who)=>{const p=x.paymentSplit?.[who];if(!p||!Number(p.amount))return null;const method=p.payment==="CARD"?`💳 ${p.card}`:"$ CASH";return `${personName(who)} ${money(Number(p.amount))} (${method.replace(/💳 [WC]/,`💳 CARTÃO ${personName(p.card)}`)})`};
  return [fmt("W"),fmt("C")].filter(Boolean).join(" · ");
 }
 function setSync(t){const el=$("#syncStatus");if(el)el.textContent=t}
@@ -99,8 +101,12 @@ function buildMonth(key){
  const williamReceives=familyNet+carolPaidByWilliam-williamPaidByCarol;
 
  const cmap=new Map();
- (hist?.categories||[]).forEach(c=>{let v=cmap.get(c.category)||{category:c.category,total:0,groups:new Set()};v.total+=Number(c.total||0);v.groups.add(c.group);cmap.set(c.category,v)});
- expenses.forEach(x=>{let v=cmap.get(x.category)||{category:x.category,total:0,groups:new Set()};v.total+=Number(x.amount);v.groups.add(x.group);cmap.set(x.category,v)});
+ const addCategory=(category,group,amount)=>{
+   let v=cmap.get(category)||{category,total:0,groups:new Set(),byGroup:{}};
+   const n=Number(amount||0);v.total+=n;v.groups.add(group);v.byGroup[group]=(v.byGroup[group]||0)+n;cmap.set(category,v);
+ };
+ (hist?.categories||[]).forEach(c=>addCategory(c.category,c.group,c.total));
+ expenses.forEach(x=>addCategory(x.category,x.group,x.amount));
 
  const histIncomeW=Number(hist?.income?.W||0),histIncomeC=Number(hist?.income?.C||0);
  const liveIncomeW=sum(incomes.filter(x=>x.receivedBy==="W")),liveIncomeC=sum(incomes.filter(x=>x.receivedBy==="C"));
@@ -137,11 +143,13 @@ function render(){
  const key=mkey(current),d=buildMonth(key);
  $("#monthTitle").textContent=current.toLocaleDateString("pt-BR",{month:"long",year:"numeric"}).toUpperCase();
  $("#familyTotal").textContent=money(d.family.total);$("#wPaid").textContent=money(d.family.W);$("#cPaid").textContent=money(d.family.C);
- $("#settlement").textContent=Math.abs(d.williamReceives)<.005?"SEM ACERTO NO MÊS":d.williamReceives>0?`W TEM A RECEBER ${money(d.williamReceives)}`:`C TEM A RECEBER ${money(-d.williamReceives)}`;
+ $("#settlement").textContent=Math.abs(d.williamReceives)<.005?"SEM ACERTO NO MÊS":d.williamReceives>0?`WILLIAM TEM A RECEBER ${money(d.williamReceives)}`:`CAROL TEM A RECEBER ${money(-d.williamReceives)}`;
  $("#cardW").textContent=money(d.cards.W);$("#cardC").textContent=money(d.cards.C);$("#cardTotal").textContent=money(d.cards.W+d.cards.C);
  const cardSection=$("#cardTotal").closest(".card");let old=cardSection.querySelector(".bill-detail-wrap");if(old)old.remove();let detail=document.createElement("div");detail.className="bill-detail-wrap";detail.innerHTML=`<div class="bill-detail"><span>COMPRAS PRÓPRIAS</span><strong>${money(d.cards.ownW+d.cards.ownC)}</strong></div><div class="bill-detail"><span>TERCEIROS</span><strong>${money(d.cards.thirdW+d.cards.thirdC)}</strong></div>`;cardSection.appendChild(detail);
  $("#totalContas").textContent=money(d.groups.CONTAS.total);$("#totalAlice").textContent=money(d.groups.ALICE.total);$("#totalCasal").textContent=money(d.groups.CASAL.total);$("#totalWilliam").textContent=money(d.groups.WILLIAM.total);$("#totalCarol").textContent=money(d.groups.CAROL.total);
- $("#categoryTotals").innerHTML=d.categories.length?d.categories.map(c=>`<div class="catrow"><div class="catname"><span class="caticon">${ICONS[c.category]||"📌"}</span><span>${c.category.toUpperCase()}<span class="catmeta">${[...c.groups].map(g=>(GROUP_ICON[g]||"•")+" "+g).join(" · ")}</span></span></div><div class="catvalue">${money(c.total)}</div></div>`).join(""):`<div class="mini">SEM GASTOS NESTE MÊS.</div>`;
+ const totalsGroup=$("#totalsGroup")?.value||"";
+ const visibleCategories=d.categories.map(c=>totalsGroup?{...c,total:Number(c.byGroup?.[totalsGroup]||0),groups:new Set([totalsGroup])}:c).filter(c=>c.total>0);
+ $("#categoryTotals").innerHTML=visibleCategories.length?visibleCategories.map(c=>`<div class="catrow"><div class="catname"><span class="caticon">${ICONS[c.category]||"📌"}</span><span>${c.category.toUpperCase()}<span class="catmeta">${[...c.groups].map(g=>(GROUP_ICON[g]||"•")+" "+g).join(" · ")}</span></span></div><div class="catvalue">${money(c.total)}</div></div>`).join(""):`<div class="mini">SEM GASTOS NESTE MÊS.</div>`;
  $("#incomeW").textContent=money(d.income.W);$("#incomeC").textContent=money(d.income.C);$("#incomeTotal").textContent=money(d.income.total);
  const incomeNames={SALARIO:"SALÁRIO",BONUS:"BÔNUS",REEMBOLSO:"REEMBOLSO",VENDA:"VENDA",RESTITUICAO:"RESTITUIÇÃO",OUTROS:"OUTROS"};
  $("#incomeBreakdown").innerHTML=d.income.byCategory.length?d.income.byCategory.map(([k,v])=>`<div class="income-row"><span>${incomeNames[k]||k}</span><strong>${money(v)}</strong></div>`).join(""):`<div class="mini">SEM RECEITAS NESTE MÊS.</div>`;
@@ -159,13 +167,13 @@ function render(){
      const icon=inc?"💵":third?"🤝":(ICONS[x.category]||"📌");
      let meta="";
      if(inc){
-       meta=`RECEITA · ${incomeNames[x.incomeCategory]||x.incomeCategory} · ${x.date.split("-").reverse().join("/")} · RECEBIDO POR ${x.receivedBy}`;
+       meta=`RECEITA · ${incomeNames[x.incomeCategory]||x.incomeCategory} · ${x.date.split("-").reverse().join("/")} · RECEBIDO POR ${personName(x.receivedBy)}`;
      }else if(third){
        meta=`TERCEIROS · ${x.date.split("-").reverse().join("/")} · 💳 ${x.card}`;
      }else{
        const paymentText=hasSplit(x)
          ? `✂️ ${splitMeta(x)}`
-         : `PAGO POR ${x.paidBy} · ${x.payment==="CARD"?"💳 "+x.card:"$ CASH"}`;
+         : `PAGO POR ${personName(x.paidBy)} · ${x.payment==="CARD"?"💳 CARTÃO "+personName(x.card):"$ CASH"}`;
        meta=`${GROUP_ICON[x.group]} ${x.group} · ${x.category} · ${x.date.split("-").reverse().join("/")} · ${paymentText}${x.installmentLabel?" · "+x.installmentLabel:""}${x.recurringLabel?" · 🔁 "+x.recurringLabel:""}`;
      }
      return `<div class="tx"><div><strong>${icon} ${x.description}</strong><div class="meta">${meta}</div></div><div class="amount">${money(Number(x.amount))}<div class="tx-actions"><button class="action-btn action-edit" data-edit="${x.id}">✏ EDITAR</button><button class="action-btn action-delete" data-del="${x.id}">🗑 EXCLUIR</button></div></div></div>`;
@@ -217,7 +225,7 @@ function openEdit(id){
 }
 
 $("#fab").onclick=()=>{editingId=null;$("#expenseForm").reset();$("#expenseDialogTitle").textContent="➕ NOVO LANÇAMENTO";$("#editHint").classList.add("hidden");$("#entryType").value="EXPENSE";$("#splitPayment").checked=false;$("#splitAmountW").value="";$("#splitAmountC").value="";$("#date").value=new Date().toISOString().slice(0,10);$("#group").value="CASAL";$("#payment").value="CARD";$("#installments").value=1;let d=new Date();d.setMonth(d.getMonth()+11);$("#recurringUntil").value=mkey(d);updateCategories();updatePayment();updateRecurring();updateEntryType();updateSplitPayment();$("#expenseDialog").showModal()};
-$("#closeDialog").onclick=()=>$("#expenseDialog").close();$("#entryType").onchange=updateEntryType;$("#splitPayment").onchange=()=>{updateSplitPayment();updateEntryType()};$("#splitPaymentW").onchange=updateSplitPayment;$("#splitPaymentC").onchange=updateSplitPayment;$("#group").onchange=updateCategories;$("#paidBy").onchange=updatePayment;$("#payment").onchange=updatePayment;$("#recurring").onchange=updateRecurring;$("#filterGroup").onchange=render;$("#chartFilter").onchange=renderChart;$("#prevMonth").onclick=()=>{current.setMonth(current.getMonth()-1);render()};$("#nextMonth").onclick=()=>{current.setMonth(current.getMonth()+1);render()};
+$("#closeDialog").onclick=()=>$("#expenseDialog").close();$("#entryType").onchange=updateEntryType;$("#splitPayment").onchange=()=>{updateSplitPayment();updateEntryType()};$("#splitPaymentW").onchange=updateSplitPayment;$("#splitPaymentC").onchange=updateSplitPayment;$("#group").onchange=updateCategories;$("#paidBy").onchange=updatePayment;$("#payment").onchange=updatePayment;$("#recurring").onchange=updateRecurring;$("#filterGroup").onchange=render;$("#totalsGroup").onchange=render;$("#chartFilter").onchange=renderChart;$("#prevMonth").onclick=()=>{current.setMonth(current.getMonth()-1);render()};$("#nextMonth").onclick=()=>{current.setMonth(current.getMonth()+1);render()};
 
 $("#expenseForm").onsubmit=async e=>{
  e.preventDefault();

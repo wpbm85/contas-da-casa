@@ -48,3 +48,6 @@ body.authenticated .auth-screen{display:none!important}
 .split-pay-note{font-size:10px;color:var(--muted);margin-top:8px}
 .split-badge{display:inline-block;margin-left:5px;padding:2px 5px;border-radius:5px;background:#eef6fb;color:#245c82;font-size:9px;font-weight:850}
 @media(max-width:600px){.split-pay-grid{grid-template-columns:1fr 1fr}.split-pay-grid label:last-child{grid-column:1/-1}}
+
+.totals-tools{display:flex;align-items:center;gap:8px}.totals-tools select{width:auto;min-width:120px;padding:8px 10px}
+@media(max-width:520px){.sec-totals .section-title{align-items:flex-start}.totals-tools{flex-direction:column;align-items:flex-end}.totals-tools select{min-width:130px}}

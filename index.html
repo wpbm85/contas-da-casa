@@ -38,18 +38,18 @@
 <section class="card sec-family">
   <h2>1 · TOTAL FAMÍLIA</h2>
   <div class="big" id="familyTotal">R$ 0,00</div>
-  <div class="split"><div><span>👨 W PAGOU</span><strong id="wPaid"></strong></div><div><span>👩 C PAGOU</span><strong id="cPaid"></strong></div></div>
+  <div class="split"><div><span>👨 WILLIAM PAGOU</span><strong id="wPaid"></strong></div><div><span>👩 CAROL PAGOU</span><strong id="cPaid"></strong></div></div>
   <div class="settlement" id="settlement"></div>
 </section>
 
 <section class="card sec-card">
   <h2>2 · FATURA</h2>
-  <div class="split"><div><span>💳 CARTÃO W</span><strong id="cardW"></strong></div><div><span>💳 CARTÃO C</span><strong id="cardC"></strong></div></div>
+  <div class="split"><div><span>💳 CARTÃO WILLIAM</span><strong id="cardW"></strong></div><div><span>💳 CARTÃO CAROL</span><strong id="cardC"></strong></div></div>
   <div class="total-line"><span>TOTAL DAS FATURAS</span><strong id="cardTotal"></strong></div>
 </section>
 
 <section class="card sec-totals">
-  <div class="section-title"><h2>3 · TOTAIS</h2><span class="mini">POR CATEGORIA</span></div>
+  <div class="section-title"><h2>3 · TOTAIS</h2><div class="totals-tools"><span class="mini">POR CATEGORIA</span><select id="totalsGroup"><option value="">TODOS</option><option value="CONTAS">CONTAS</option><option value="ALICE">ALICE</option><option value="CASAL">CASAL</option><option value="WILLIAM">WILLIAM</option><option value="CAROL">CAROL</option></select></div></div>
   <div id="categoryTotals" class="category-list"></div>
 </section>
 
@@ -59,8 +59,8 @@
     <div class="subtile contas"><span>🏠 CONTAS</span><strong id="totalContas"></strong></div>
     <div class="subtile alice"><span>🧒 ALICE</span><strong id="totalAlice"></strong></div>
     <div class="subtile casal"><span>💞 CASAL</span><strong id="totalCasal"></strong></div>
-    <div class="subtile william"><span>👨 W</span><strong id="totalWilliam"></strong></div>
-    <div class="subtile carol"><span>👩 C</span><strong id="totalCarol"></strong></div>
+    <div class="subtile william"><span>👨 WILLIAM</span><strong id="totalWilliam"></strong></div>
+    <div class="subtile carol"><span>👩 CAROL</span><strong id="totalCarol"></strong></div>
   </div>
 </section>
 
@@ -81,8 +81,8 @@
 <section class="card sec-income">
   <div class="section-title"><h2>6 · RECEITAS</h2><span class="mini">ENTRADAS DO MÊS</span></div>
   <div class="split">
-    <div><span>👨 W</span><strong id="incomeW">R$ 0,00</strong></div>
-    <div><span>👩 C</span><strong id="incomeC">R$ 0,00</strong></div>
+    <div><span>👨 WILLIAM</span><strong id="incomeW">R$ 0,00</strong></div>
+    <div><span>👩 CAROL</span><strong id="incomeC">R$ 0,00</strong></div>
   </div>
   <div class="total-line"><span>TOTAL DE RECEITAS</span><strong id="incomeTotal">R$ 0,00</strong></div>
   <div id="incomeBreakdown" class="income-list"></div>
@@ -100,8 +100,8 @@
       <option value="CAROL">CAROL</option>
       <option value="CARDS">FATURAS</option>
       <option value="INCOME">RECEITAS</option>
-      <option value="SALARY_W">SALÁRIO W</option>
-      <option value="SALARY_C">SALÁRIO C</option>
+      <option value="SALARY_W">SALÁRIO WILLIAM</option>
+      <option value="SALARY_C">SALÁRIO CAROL</option>
       <option value="NET">SALDO (RECEITAS - GASTOS)</option>
     </select>
   </div>
@@ -125,7 +125,7 @@
 <label>📝 DESCRIÇÃO <span class="optional">(OPCIONAL)</span><input id="description" maxlength="80" placeholder="Ex.: Pão de Açúcar"></label>
 <div class="row"><label>📅 DATA<input id="date" type="date" required></label><label id="groupLabel">🗂️ GRUPO<select id="group">
 <option value="CASAL">💞 CASAL</option><option value="ALICE">🧒 ALICE</option><option value="CONTAS">🏠 CONTAS</option>
-<option value="WILLIAM">👨 W</option><option value="CAROL">👩 C</option></select></label></div>
+<option value="WILLIAM">👨 WILLIAM</option><option value="CAROL">👩 CAROL</option></select></label></div>
 <label id="categoryLabel" class="category-primary">🏷️ CATEGORIA<select id="category"></select></label>
 <div id="incomeFields" class="hidden subbox">
   <label>💵 RECEITA
@@ -139,31 +139,31 @@
     </select>
   </label>
   <label>👤 RECEBIDO POR
-    <select id="receivedBy"><option value="W">W</option><option value="C">C</option></select>
+    <select id="receivedBy"><option value="W">WILLIAM</option><option value="C">CAROL</option></select>
   </label>
 </div>
-<div id="expensePaymentFields" class="row"><label>🙋 PAGO POR<select id="paidBy"><option value="W">W</option><option value="C">C</option></select></label>
+<div id="expensePaymentFields" class="row"><label>🙋 PAGO POR<select id="paidBy"><option value="W">WILLIAM</option><option value="C">CAROL</option></select></label>
 <label>💵 PAGAMENTO<select id="payment"><option value="CARD">💳 CARTÃO</option><option value="$">$ CASH</option></select></label></div>
-<label id="splitPaymentToggle" class="checkline"><input id="splitPayment" type="checkbox"><span>✂️ DIVIDIR PAGAMENTO ENTRE W E C</span></label>
+<label id="splitPaymentToggle" class="checkline"><input id="splitPayment" type="checkbox"><span>✂️ DIVIDIR PAGAMENTO ENTRE WILLIAM E CAROL</span></label>
 <div id="splitPaymentFields" class="hidden subbox">
-  <div class="split-pay-title">PARTE DE W</div>
+  <div class="split-pay-title">PARTE DE WILLIAM</div>
   <div class="split-pay-grid">
-    <label>💰 VALOR W<input id="splitAmountW" type="number" min="0" step=".01" placeholder="0,00"></label>
-    <label>💵 PAGAMENTO W<select id="splitPaymentW"><option value="CARD">💳 CARTÃO</option><option value="$">$ CASH</option></select></label>
+    <label>💰 VALOR WILLIAM<input id="splitAmountW" type="number" min="0" step=".01" placeholder="0,00"></label>
+    <label>💵 PAGAMENTO WILLIAM<select id="splitPaymentW"><option value="CARD">💳 CARTÃO</option><option value="$">$ CASH</option></select></label>
   </div>
-  <div class="split-pay-title">PARTE DE C</div>
+  <div class="split-pay-title">PARTE DE CAROL</div>
   <div class="split-pay-grid">
-    <label>💰 VALOR C<input id="splitAmountC" type="number" min="0" step=".01" placeholder="0,00"></label>
-    <label>💵 PAGAMENTO C<select id="splitPaymentC"><option value="CARD">💳 CARTÃO</option><option value="$">$ CASH</option></select></label>
+    <label>💰 VALOR CAROL<input id="splitAmountC" type="number" min="0" step=".01" placeholder="0,00"></label>
+    <label>💵 PAGAMENTO CAROL<select id="splitPaymentC"><option value="CARD">💳 CARTÃO</option><option value="$">$ CASH</option></select></label>
   </div>
-  <div class="split-pay-note">A soma de W + C deve ser igual ao valor total. Pagamento dividido é tratado como lançamento único.</div>
+  <div class="split-pay-note">A soma de WILLIAM + CAROL deve ser igual ao valor total. Pagamento dividido é tratado como lançamento único.</div>
 </div>
-<div id="thirdPartyNote" class="hidden edit-hint">💳 ESTE VALOR ENTRA NA FATURA, MAS NÃO ENTRA EM GASTOS, CATEGORIAS OU ACERTO W×C.</div>
-<div id="cardFields" class="hidden subbox"><div class="row"><label id="cardLabel">💳 CARTÃO<select id="card"><option value="W">CARTÃO W</option><option value="C">CARTÃO C</option></select></label><label>🔢 PARCELAS<input id="installments" type="number" min="1" max="60" value="1"></label></div></div>
+<div id="thirdPartyNote" class="hidden edit-hint">💳 ESTE VALOR ENTRA NA FATURA, MAS NÃO ENTRA EM GASTOS, CATEGORIAS OU ACERTO WILLIAM × CAROL.</div>
+<div id="cardFields" class="hidden subbox"><div class="row"><label id="cardLabel">💳 CARTÃO<select id="card"><option value="W">CARTÃO WILLIAM</option><option value="C">CARTÃO CAROL</option></select></label><label>🔢 PARCELAS<input id="installments" type="number" min="1" max="60" value="1"></label></div></div>
 <label class="checkline"><input id="recurring" type="checkbox"><span>🔁 REPETIR MENSALMENTE</span></label>
 <div id="recurringFields" class="hidden subbox"><label>⏳ REPETIR ATÉ<input id="recurringUntil" type="month"></label></div>
 <button class="primary" type="submit">SALVAR</button>
 </form>
 </dialog>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="history.js?v=102"></script><script src="app.js?v=102"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="history.js?v=103"></script><script src="app.js?v=103"></script>
 </body></html>
