@@ -7,6 +7,8 @@ const SUPABASE_PUBLISHABLE_KEY="sb_publishable_vsd_A1GKv9Fr1Gubf8fJaw_XHHywBRM";
 const db=supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
 const KEY="contas_pwa_transactions_v1";
 let remoteRows=[],historicalData={},currentUser=null,realtimeChannel=null;
+const PRIVACY_KEY="contas_pwa_values_hidden_v1";
+let valuesHidden=localStorage.getItem(PRIVACY_KEY)!=="false";
 let current=new Date(); current.setDate(1); let editingId=null;
 const PERSON_NAME={W:"WILLIAM",C:"CAROL"};
 const personName=x=>PERSON_NAME[x]||x;
@@ -139,6 +141,26 @@ function renderChart(){
  $("#historyChart").innerHTML=`<svg viewBox="0 0 ${W} ${H}"><line x1="${pad}" y1="${H/2}" x2="${W-pad}" y2="${H/2}" stroke="#d5dde4"/><polyline points="${pts}" fill="none" stroke="#526f92" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/>${dots}${xl}</svg>`;
 }
 
+
+function applyPrivacy(){
+ document.body.classList.toggle("values-hidden",valuesHidden);
+ const btn=$("#privacyToggle");
+ if(btn){
+   btn.textContent=valuesHidden?"🙈":"👁️";
+   btn.setAttribute("aria-label",valuesHidden?"Mostrar valores":"Ocultar valores");
+   btn.title=valuesHidden?"Mostrar valores":"Ocultar valores";
+ }
+}
+function markMoneyValues(){
+ const selectors=[
+   "#familyTotal","#wPaid","#cPaid","#settlement",
+   "#cardW","#cardC","#cardTotal",
+   "#totalContas","#totalAlice","#totalCasal","#totalWilliam","#totalCarol",
+   "#incomeW","#incomeC","#incomeTotal",
+   ".catvalue",".amount",".income-row strong",".bill-detail strong",".total-line strong"
+ ];
+ document.querySelectorAll(selectors.join(",")).forEach(el=>el.classList.add("money-hidden"));
+}
 function render(){
  const key=mkey(current),d=buildMonth(key);
  $("#monthTitle").textContent=current.toLocaleDateString("pt-BR",{month:"long",year:"numeric"}).toUpperCase();
@@ -183,6 +205,7 @@ function render(){
  }
  document.querySelectorAll("[data-edit]").forEach(b=>b.onclick=()=>openEdit(b.dataset.edit));document.querySelectorAll("[data-del]").forEach(b=>b.onclick=async()=>{if(!confirm("Excluir este lançamento?"))return;setSync("☁️ SALVANDO...");const {error}=await db.from("lancamentos").delete().eq("id",b.dataset.del);if(error){alert("Erro ao excluir: "+error.message);setSync("⚠️ ERRO");return}await refreshRemote()});
  renderChart();
+ markMoneyValues();applyPrivacy();
 }
 
 function orderedCategories(group){
@@ -224,8 +247,8 @@ function openEdit(id){
  $("#installments").value=1;$("#recurring").checked=false;updateRecurring();updateEntryType();$("#expenseDialog").showModal();
 }
 
-$("#fab").onclick=()=>{editingId=null;$("#expenseForm").reset();$("#expenseDialogTitle").textContent="➕ NOVO LANÇAMENTO";$("#editHint").classList.add("hidden");$("#entryType").value="EXPENSE";$("#splitPayment").checked=false;$("#splitAmountW").value="";$("#splitAmountC").value="";$("#date").value=new Date().toISOString().slice(0,10);$("#group").value="CASAL";$("#payment").value="CARD";$("#installments").value=1;let d=new Date();d.setMonth(d.getMonth()+11);$("#recurringUntil").value=mkey(d);updateCategories();updatePayment();updateRecurring();updateEntryType();updateSplitPayment();$("#expenseDialog").showModal()};
-$("#closeDialog").onclick=()=>$("#expenseDialog").close();$("#entryType").onchange=updateEntryType;$("#splitPayment").onchange=()=>{updateSplitPayment();updateEntryType()};$("#splitPaymentW").onchange=updateSplitPayment;$("#splitPaymentC").onchange=updateSplitPayment;$("#group").onchange=updateCategories;$("#paidBy").onchange=updatePayment;$("#payment").onchange=updatePayment;$("#recurring").onchange=updateRecurring;$("#filterGroup").onchange=render;$("#totalsGroup").onchange=render;$("#chartFilter").onchange=renderChart;$("#prevMonth").onclick=()=>{current.setMonth(current.getMonth()-1);render()};$("#nextMonth").onclick=()=>{current.setMonth(current.getMonth()+1);render()};
+$("#fab").onclick=()=>{editingId=null;$("#expenseForm").reset();$("#expenseDialogTitle").textContent="➕ NOVO LANÇAMENTO";$("#editHint").classList.add("hidden");$("#entryType").value="EXPENSE";$("#splitPayment").checked=false;$("#splitAmountW").value="";$("#splitAmountC").value="";$("#date").value=new Date().toISOString().slice(0,10);$("#group").value="CASAL";$("#payment").value="CARD";$("#installments").value=1;let d=new Date();d.setMonth(d.getMonth()+11);$("#recurringUntil").value=mkey(d);updateCategories();updatePayment();updateRecurring();updateEntryType();applyPrivacy();updateSplitPayment();$("#expenseDialog").showModal()};
+$("#closeDialog").onclick=()=>$("#expenseDialog").close();$("#entryType").onchange=updateEntryType;$("#splitPayment").onchange=()=>{updateSplitPayment();updateEntryType()};$("#splitPaymentW").onchange=updateSplitPayment;$("#splitPaymentC").onchange=updateSplitPayment;$("#group").onchange=updateCategories;$("#paidBy").onchange=updatePayment;$("#payment").onchange=updatePayment;$("#recurring").onchange=updateRecurring;$("#filterGroup").onchange=render;$("#totalsGroup").onchange=render;$("#chartFilter").onchange=()=>{renderChart();applyPrivacy()};$("#prevMonth").onclick=()=>{current.setMonth(current.getMonth()-1);render()};$("#nextMonth").onclick=()=>{current.setMonth(current.getMonth()+1);render()};
 
 $("#expenseForm").onsubmit=async e=>{
  e.preventDefault();
