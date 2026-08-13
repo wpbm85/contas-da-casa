@@ -1,7 +1,9 @@
-# CONTAS DA CASA — v10.4 PRIVACIDADE
+# CONTAS DA CASA — v10.4.1
 
-- Botão 🙈/👁️ no topo para ocultar/mostrar todos os valores monetários.
-- Padrão: valores OCULTOS.
-- A preferência fica salva no aparelho.
-- Total família, faturas, totais, subtotais, receitas, lançamentos e valores dos gráficos são mascarados.
-- Não há qualquer alteração no Supabase ou no banco de dados.
+Correção do botão de privacidade:
+- 🔒 = valores ocultos (padrão)
+- 👁️ = valores visíveis
+- botão fixado no cabeçalho, à esquerda das setas do mês
+- corrigido o clique do botão
+- preferência continua salva no aparelho
+- sem alteração no Supabase

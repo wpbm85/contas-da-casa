@@ -146,7 +146,7 @@ function applyPrivacy(){
  document.body.classList.toggle("values-hidden",valuesHidden);
  const btn=$("#privacyToggle");
  if(btn){
-   btn.textContent=valuesHidden?"🙈":"👁️";
+   btn.textContent=valuesHidden?"🔒":"👁️";
    btn.setAttribute("aria-label",valuesHidden?"Mostrar valores":"Ocultar valores");
    btn.title=valuesHidden?"Mostrar valores":"Ocultar valores";
  }
@@ -377,6 +377,12 @@ $("#loginForm").onsubmit=async e=>{
  }
 };
 $("#logoutBtn").onclick=()=>db.auth.signOut();
+$("#privacyToggle").onclick=()=>{
+ valuesHidden=!valuesHidden;
+ localStorage.setItem(PRIVACY_KEY,String(valuesHidden));
+ applyPrivacy();
+};
+
 
 function checkMigration(){
  const rows=localLoad().map(x=>normalizeLegacy({...x}));
