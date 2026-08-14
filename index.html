@@ -3,10 +3,10 @@
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0b3a66"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="apple-touch-icon" href="icon-192.png"><title>Contas da Casa</title>
-<link rel="manifest" href="manifest.webmanifest"><link rel="stylesheet" href="styles.css?v=1041">
+<link rel="manifest" href="manifest.webmanifest"><link rel="stylesheet" href="styles.css?v=105">
 </head>
 <body>
-<div id="authScreen" class="auth-screen" style="position:fixed;inset:0;z-index:9999;background:#eef2f5;display:flex;align-items:center;justify-content:center;padding:20px">
+<div id="authScreen" class="auth-screen">
   <div class="auth-card">
     <div class="auth-brand">💰 CONTAS DA CASA</div>
     <h2>ENTRAR</h2>
@@ -38,7 +38,7 @@
 <section class="card sec-family">
   <h2>1 · TOTAL FAMÍLIA</h2>
   <div class="big" id="familyTotal">R$ 0,00</div>
-  <div class="split"><div><span>👨 WILLIAM PAGOU</span><strong id="wPaid"></strong></div><div><span>👩 CAROL PAGOU</span><strong id="cPaid"></strong></div></div>
+  <div class="split"><div><span>🧔🏻‍♂️ WILLIAM PAGOU</span><strong id="wPaid"></strong></div><div><span>👩🏻 CAROL PAGOU</span><strong id="cPaid"></strong></div></div>
   <div class="settlement" id="settlement"></div>
 </section>
 
@@ -56,11 +56,11 @@
 <section class="card sec-subtotals">
   <h2>4 · SUBTOTAIS</h2>
   <div class="subgrid">
-    <div class="subtile contas"><span>🏠 CONTAS</span><strong id="totalContas"></strong></div>
-    <div class="subtile alice"><span>🧒 ALICE</span><strong id="totalAlice"></strong></div>
-    <div class="subtile casal"><span>💞 CASAL</span><strong id="totalCasal"></strong></div>
-    <div class="subtile william"><span>👨 WILLIAM</span><strong id="totalWilliam"></strong></div>
-    <div class="subtile carol"><span>👩 CAROL</span><strong id="totalCarol"></strong></div>
+    <div class="subtile contas"><span>🏠 CONTAS</span><strong id="totalContas"></strong><small class="subavg">MÉDIA <span class="subavg-period"></span> · <b id="avgContas" class="subavg-value"></b></small></div>
+    <div class="subtile alice"><span>👧🏻 ALICE</span><strong id="totalAlice"></strong><small class="subavg">MÉDIA <span class="subavg-period"></span> · <b id="avgAlice" class="subavg-value"></b></small></div>
+    <div class="subtile casal"><span>💞 CASAL</span><strong id="totalCasal"></strong><small class="subavg">MÉDIA <span class="subavg-period"></span> · <b id="avgCasal" class="subavg-value"></b></small></div>
+    <div class="subtile william"><span>🧔🏻‍♂️ WILLIAM</span><strong id="totalWilliam"></strong><small class="subavg">MÉDIA <span class="subavg-period"></span> · <b id="avgWilliam" class="subavg-value"></b></small></div>
+    <div class="subtile carol"><span>👩🏻 CAROL</span><strong id="totalCarol"></strong><small class="subavg">MÉDIA <span class="subavg-period"></span> · <b id="avgCarol" class="subavg-value"></b></small></div>
   </div>
 </section>
 
@@ -81,8 +81,8 @@
 <section class="card sec-income">
   <div class="section-title"><h2>6 · RECEITAS</h2><span class="mini">ENTRADAS DO MÊS</span></div>
   <div class="split">
-    <div><span>👨 WILLIAM</span><strong id="incomeW">R$ 0,00</strong></div>
-    <div><span>👩 CAROL</span><strong id="incomeC">R$ 0,00</strong></div>
+    <div><span>🧔🏻‍♂️ WILLIAM</span><strong id="incomeW">R$ 0,00</strong></div>
+    <div><span>👩🏻 CAROL</span><strong id="incomeC">R$ 0,00</strong></div>
   </div>
   <div class="total-line"><span>TOTAL DE RECEITAS</span><strong id="incomeTotal">R$ 0,00</strong></div>
   <div id="incomeBreakdown" class="income-list"></div>
@@ -105,7 +105,7 @@
       <option value="NET">SALDO (RECEITAS - GASTOS)</option>
     </select>
   </div>
-  <div id="historyChart" class="chart"></div>
+  <div id="historyChart" class="chart"></div><div id="chartPeriodNote" class="chart-period-note"></div>
 </section>
 <div class="privacy-note">🔒 HISTÓRICO E LANÇAMENTOS FICAM NO BANCO PRIVADO; O GITHUB CONTÉM APENAS O APP.</div>
 </main>
@@ -124,8 +124,8 @@
 <label>💰 VALOR<input id="amount" type="number" min=".01" step=".01" required placeholder="0,00"></label>
 <label>📝 DESCRIÇÃO <span class="optional">(OPCIONAL)</span><input id="description" maxlength="80" placeholder="Ex.: Pão de Açúcar"></label>
 <div class="row"><label>📅 DATA<input id="date" type="date" required></label><label id="groupLabel">🗂️ GRUPO<select id="group">
-<option value="CASAL">💞 CASAL</option><option value="ALICE">🧒 ALICE</option><option value="CONTAS">🏠 CONTAS</option>
-<option value="WILLIAM">👨 WILLIAM</option><option value="CAROL">👩 CAROL</option></select></label></div>
+<option value="CASAL">💞 CASAL</option><option value="ALICE">👧🏻 ALICE</option><option value="CONTAS">🏠 CONTAS</option>
+<option value="WILLIAM">🧔🏻‍♂️ WILLIAM</option><option value="CAROL">👩🏻 CAROL</option></select></label></div>
 <label id="categoryLabel" class="category-primary">🏷️ CATEGORIA<select id="category"></select></label>
 <div id="incomeFields" class="hidden subbox">
   <label>💵 RECEITA
@@ -165,5 +165,5 @@
 <button class="primary" type="submit">SALVAR</button>
 </form>
 </dialog>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="history.js?v=1041"></script><script src="app.js?v=1041"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="history.js?v=105"></script><script src="app.js?v=105"></script>
 </body></html>

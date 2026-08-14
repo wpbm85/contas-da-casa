@@ -1,7 +1,7 @@
 const CATEGORIES={"CONTAS": ["FINANCIAMENTO", "CONDOMINIO", "IPTU / VAGA", "INTERNET", "COMGAS", "ENEL", "FAXINA", "NETFLIX", "ML/DISNEY", "AMAZON", "SEGURO BOLSA", "SEGURO APTO", "SEGURO CARRO", "IPVA", "OUTROS"], "ALICE": ["ESCOLA", "CONVENIO", "PEDIATRA", "DENTISTA", "ESPORTE", "FARMA/SAÚDE", "ROUPAS", "PRESENTES", "FESTA", "HSP", "PASSEIOS", "OUTROS"], "CASAL": ["CONV ODONTO", "MERCADO", "RESTAURANTES", "CARRO", "PASSEIOS", "FARMÁCIA", "TRANSPORTE", "MANUTENÇÃO", "ROUPAS", "MÓVEIS", "PRESENTES", "VIAGEM", "OUTROS"], "WILLIAM": ["CONVENIO", "CELULAR", "ALIMENTAÇÃO", "PASSEIOS", "TRANSPORTE", "DOCS", "FARMACIA", "COMPRAS", "PRESENTES", "BELEZA", "DENTISTA/MED", "SEGURO", "ESPORTE", "OUTROS"], "CAROL": ["CONVENIO", "CELULAR", "ALIMENTAÇÃO", "PASSEIOS", "TRANSPORTE", "DOCS", "FARMACIA", "COMPRAS", "PRESENTES", "BELEZA", "DENTISTA/MED", "SEGURO", "ESPORTE", "OUTROS"]};
 const ICONS={"FINANCIAMENTO": "🏦", "CONDOMINIO": "🏢", "IPTU / VAGA": "🅿️", "INTERNET": "🌐", "COMGAS": "🔥", "ENEL": "⚡", "FAXINA": "🧹", "NETFLIX": "📺", "ML/DISNEY": "📺", "AMAZON": "📦", "SEGURO BOLSA": "👜", "SEGURO APTO": "🏠", "SEGURO CARRO": "🚗", "IPVA": "🚘", "ESCOLA": "🎒", "CONVENIO": "🩺", "PEDIATRA": "👩‍⚕️", "DENTISTA": "🦷", "ESPORTE": "🏃", "FARMA/SAÚDE": "💊", "ROUPAS": "👕", "PRESENTES": "🎁", "FESTA": "🎉", "HSP": "🏥", "CONV ODONTO": "🦷", "MERCADO": "🛒", "RESTAURANTES": "🍽️", "CARRO": "🚗", "PASSEIOS": "🎡", "FARMÁCIA": "💊", "FARMACIA": "💊", "TRANSPORTE": "🚌", "MANUTENÇÃO": "🛠️", "MÓVEIS": "🪑", "VIAGEM": "✈️", "CELULAR": "📱", "ALIMENTAÇÃO": "🥪", "DOCS": "📄", "COMPRAS": "🛍️", "BELEZA": "💇", "DENTISTA/MED": "🩺", "SEGURO": "🛡️", "OUTROS": "📌"};
 const EXPORT_ORDER={"CONTAS": ["FINANCIAMENTO", "CONDOMINIO", "IPTU / VAGA", "INTERNET", "COMGAS", "ENEL", "FAXINA", "NETFLIX", "ML/DISNEY", "AMAZON", "SEGURO BOLSA", "SEGURO APTO", "SEGURO CARRO", "IPVA", "OUTROS"], "ALICE": ["ESCOLA", "CONVENIO", "PEDIATRA", "DENTISTA", "ESPORTE", "FARMA/SAÚDE", "ROUPAS", "PRESENTES", "FESTA", "HSP", "PASSEIOS", "OUTROS"], "CASAL": ["CONV ODONTO", "MERCADO", "RESTAURANTES", "CARRO", "PASSEIOS", "FARMÁCIA", "TRANSPORTE", "MANUTENÇÃO", "ROUPAS", "MÓVEIS", "PRESENTES", "VIAGEM", "OUTROS"], "WILLIAM": ["CONVENIO", "CELULAR", "ALIMENTAÇÃO", "PASSEIOS", "TRANSPORTE", "DOCS", "FARMACIA", "COMPRAS", "PRESENTES", "BELEZA", "DENTISTA/MED", "SEGURO", "ESPORTE", "OUTROS"], "CAROL": ["CONVENIO", "CELULAR", "ALIMENTAÇÃO", "PASSEIOS", "TRANSPORTE", "DOCS", "FARMACIA", "COMPRAS", "PRESENTES", "BELEZA", "DENTISTA/MED", "SEGURO", "ESPORTE", "OUTROS"]};
-const GROUP_ICON={CONTAS:"🏠",ALICE:"🧒",CASAL:"💞",WILLIAM:"👨",CAROL:"👩"};
+const GROUP_ICON={CONTAS:"🏠",ALICE:"👧🏻",CASAL:"💞",WILLIAM:"🧔🏻‍♂️",CAROL:"👩🏻"};
 const SUPABASE_URL="https://ofkvpfsgxrojdygvuune.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY="sb_publishable_vsd_A1GKv9Fr1Gubf8fJaw_XHHywBRM";
 const db=supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
@@ -121,6 +121,27 @@ function buildMonth(key){
  const totalExpenses=family.total+groups.WILLIAM.total+groups.CAROL.total;
  return {hist,live,expenses,incomes,thirdParty,family,cards,groups,williamReceives,categories:[...cmap.values()].sort((a,b)=>b.total-a.total),income:{W:histIncomeW+liveIncomeW,C:histIncomeC+liveIncomeC,total:histIncomeW+histIncomeC+liveIncomeW+liveIncomeC,salaryW,salaryC,byCategory:[...incomeMap.entries()].sort((a,b)=>b[1]-a[1])},totalExpenses};
 }
+
+const MONTH_LABELS=["JAN","FEV","MAR","ABR","MAI","JUN","JUL","AGO","SET","OUT","NOV","DEZ"];
+function periodEndIndex(){
+ const now=new Date();
+ if(current.getFullYear()===now.getFullYear()) return Math.min(current.getMonth(),now.getMonth());
+ return current.getMonth();
+}
+function periodKeys(){
+ const year=current.getFullYear(),end=periodEndIndex();
+ return Array.from({length:end+1},(_,i)=>`${year}-${String(i+1).padStart(2,"0")}`);
+}
+function periodLabel(){
+ const end=periodEndIndex();
+ return `JAN → ${MONTH_LABELS[end]}`;
+}
+function groupAverage(group){
+ const keys=periodKeys();
+ if(!keys.length)return 0;
+ return keys.reduce((s,k)=>s+Number(buildMonth(k).groups[group]?.total||0),0)/keys.length;
+}
+
 function chartValue(key,filter){
  const d=buildMonth(key);
  if(filter==="FAMILY")return d.family.total;
@@ -133,14 +154,38 @@ function chartValue(key,filter){
 }
 
 function renderChart(){
- const filter=$("#chartFilter").value,year=current.getFullYear(),months=Array.from({length:12},(_,i)=>`${year}-${String(i+1).padStart(2,"0")}`),labels=["JAN","FEV","MAR","ABR","MAI","JUN","JUL","AGO","SET","OUT","NOV","DEZ"];
- const data=months.map(k=>chartValue(k,filter)),valid=data.map((v,i)=>v!==0?i:-1).filter(i=>i>=0);$("#chartYear").textContent=String(year);
- if(!valid.length){$("#historyChart").innerHTML=`<div class="empty-chart">SEM DADOS PARA ${year} NESTE FILTRO.</div>`;return}
- const W=700,H=190,pad=28,max=Math.max(...data.map(Math.abs),1),xs=i=>pad+i*(W-2*pad)/11,ys=v=>H/2-(v/max)*(H/2-pad);
- let pts=valid.map(i=>`${xs(i)},${ys(data[i])}`).join(" "),dots=valid.map(i=>`<circle cx="${xs(i)}" cy="${ys(data[i])}" r="4"></circle><text class="chart-value" x="${xs(i)}" y="${ys(data[i])-8}" text-anchor="middle">${(data[i]/1000).toFixed(1)}k</text>`).join(""),xl=labels.map((l,i)=>`<text class="chart-label" x="${xs(i)}" y="${H-5}" text-anchor="middle">${l}</text>`).join("");
- $("#historyChart").innerHTML=`<svg viewBox="0 0 ${W} ${H}"><line x1="${pad}" y1="${H/2}" x2="${W-pad}" y2="${H/2}" stroke="#d5dde4"/><polyline points="${pts}" fill="none" stroke="#526f92" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/>${dots}${xl}</svg>`;
-}
+ const filter=$("#chartFilter").value,year=current.getFullYear(),end=periodEndIndex();
+ const months=Array.from({length:end+1},(_,i)=>`${year}-${String(i+1).padStart(2,"0")}`);
+ const labels=MONTH_LABELS.slice(0,end+1);
+ const data=months.map(k=>chartValue(k,filter));
+ $("#chartYear").textContent=String(year);
+ $("#chartPeriodNote").textContent=`PERÍODO: JAN → ${MONTH_LABELS[end]}`;
 
+ if(!data.length){
+   $("#historyChart").innerHTML=`<div class="empty-chart">SEM DADOS PARA ${year} NESTE FILTRO.</div>`;
+   return;
+ }
+
+ const W=700,H=190,padL=34,padR=58,padT=24,padB=24;
+ const avg=data.reduce((s,v)=>s+Number(v||0),0)/data.length;
+ const minV=Math.min(0,...data,avg),maxV=Math.max(0,...data,avg);
+ const range=Math.max(maxV-minV,1);
+ const xs=i=>data.length===1?(W-padL-padR)/2+padL:padL+i*(W-padL-padR)/(data.length-1);
+ const ys=v=>padT+(maxV-v)*(H-padT-padB)/range;
+ const zeroY=ys(0),avgY=ys(avg);
+ const pts=data.map((v,i)=>`${xs(i)},${ys(v)}`).join(" ");
+ const dots=data.map((v,i)=>`<circle class="chart-dot" cx="${xs(i)}" cy="${ys(v)}" r="4"></circle><text class="chart-value" x="${xs(i)}" y="${ys(v)-8}" text-anchor="middle">${(v/1000).toFixed(1)}k</text>`).join("");
+ const xl=labels.map((l,i)=>`<text class="chart-label" x="${xs(i)}" y="${H-5}" text-anchor="middle">${l}</text>`).join("");
+ const avgMoney=money(avg).replace("R$ ","R$ ");
+ $("#historyChart").innerHTML=`<svg viewBox="0 0 ${W} ${H}">
+   <line class="chart-zero-line" x1="${padL}" y1="${zeroY}" x2="${W-padR}" y2="${zeroY}" stroke-width="1"/>
+   <line class="chart-average-line" x1="${padL}" y1="${avgY}" x2="${W-padR}" y2="${avgY}" stroke-width="2"/>
+   <text class="chart-average-caption" x="${W-padR+8}" y="${avgY-4}">MÉDIA</text>
+   <text class="chart-value" x="${W-padR+8}" y="${avgY+9}">${avgMoney}</text>
+   <polyline class="chart-main-line" points="${pts}" fill="none" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/>
+   ${dots}${xl}
+ </svg>`;
+}
 
 function applyPrivacy(){
  document.body.classList.toggle("values-hidden",valuesHidden);
@@ -157,7 +202,7 @@ function markMoneyValues(){
    "#cardW","#cardC","#cardTotal",
    "#totalContas","#totalAlice","#totalCasal","#totalWilliam","#totalCarol",
    "#incomeW","#incomeC","#incomeTotal",
-   ".catvalue",".amount",".income-row strong",".bill-detail strong",".total-line strong"
+   ".catvalue",".amount",".income-row strong",".bill-detail strong",".total-line strong",".subavg-value"
  ];
  document.querySelectorAll(selectors.join(",")).forEach(el=>el.classList.add("money-hidden"));
 }
@@ -169,6 +214,10 @@ function render(){
  $("#cardW").textContent=money(d.cards.W);$("#cardC").textContent=money(d.cards.C);$("#cardTotal").textContent=money(d.cards.W+d.cards.C);
  const cardSection=$("#cardTotal").closest(".card");let old=cardSection.querySelector(".bill-detail-wrap");if(old)old.remove();let detail=document.createElement("div");detail.className="bill-detail-wrap";detail.innerHTML=`<div class="bill-detail"><span>COMPRAS PRÓPRIAS</span><strong>${money(d.cards.ownW+d.cards.ownC)}</strong></div><div class="bill-detail"><span>TERCEIROS</span><strong>${money(d.cards.thirdW+d.cards.thirdC)}</strong></div>`;cardSection.appendChild(detail);
  $("#totalContas").textContent=money(d.groups.CONTAS.total);$("#totalAlice").textContent=money(d.groups.ALICE.total);$("#totalCasal").textContent=money(d.groups.CASAL.total);$("#totalWilliam").textContent=money(d.groups.WILLIAM.total);$("#totalCarol").textContent=money(d.groups.CAROL.total);
+ const avgGroups={CONTAS:groupAverage("CONTAS"),ALICE:groupAverage("ALICE"),CASAL:groupAverage("CASAL"),WILLIAM:groupAverage("WILLIAM"),CAROL:groupAverage("CAROL")};
+ $("#avgContas").textContent=money(avgGroups.CONTAS);$("#avgAlice").textContent=money(avgGroups.ALICE);$("#avgCasal").textContent=money(avgGroups.CASAL);$("#avgWilliam").textContent=money(avgGroups.WILLIAM);$("#avgCarol").textContent=money(avgGroups.CAROL);
+ document.querySelectorAll(".subavg-period").forEach(el=>el.textContent=periodLabel());
+
  const totalsGroup=$("#totalsGroup")?.value||"";
  const visibleCategories=d.categories.map(c=>totalsGroup?{...c,total:Number(c.byGroup?.[totalsGroup]||0),groups:new Set([totalsGroup])}:c).filter(c=>c.total>0);
  $("#categoryTotals").innerHTML=visibleCategories.length?visibleCategories.map(c=>`<div class="catrow"><div class="catname"><span class="caticon">${ICONS[c.category]||"📌"}</span><span>${c.category.toUpperCase()}<span class="catmeta">${[...c.groups].map(g=>(GROUP_ICON[g]||"•")+" "+g).join(" · ")}</span></span></div><div class="catvalue">${money(c.total)}</div></div>`).join(""):`<div class="mini">SEM GASTOS NESTE MÊS.</div>`;
@@ -247,7 +296,7 @@ function openEdit(id){
  $("#installments").value=1;$("#recurring").checked=false;updateRecurring();updateEntryType();$("#expenseDialog").showModal();
 }
 
-$("#fab").onclick=()=>{editingId=null;$("#expenseForm").reset();$("#expenseDialogTitle").textContent="➕ NOVO LANÇAMENTO";$("#editHint").classList.add("hidden");$("#entryType").value="EXPENSE";$("#splitPayment").checked=false;$("#splitAmountW").value="";$("#splitAmountC").value="";$("#date").value=new Date().toISOString().slice(0,10);$("#group").value="CASAL";$("#payment").value="CARD";$("#installments").value=1;let d=new Date();d.setMonth(d.getMonth()+11);$("#recurringUntil").value=mkey(d);updateCategories();updatePayment();updateRecurring();updateEntryType();applyPrivacy();updateSplitPayment();$("#expenseDialog").showModal()};
+$("#fab").onclick=()=>{editingId=null;$("#expenseForm").reset();$("#expenseDialogTitle").textContent="➕ NOVO LANÇAMENTO";$("#editHint").classList.add("hidden");$("#entryType").value="EXPENSE";$("#splitPayment").checked=false;$("#splitAmountW").value="";$("#splitAmountC").value="";$("#date").value=new Date().toISOString().slice(0,10);$("#group").value="CASAL";$("#payment").value="CARD";$("#installments").value=1;let d=new Date();d.setMonth(d.getMonth()+11);$("#recurringUntil").value=mkey(d);updateCategories();updatePayment();updateRecurring();updateEntryType();applyPrivacy();applySystemTheme();updateSplitPayment();$("#expenseDialog").showModal()};
 $("#closeDialog").onclick=()=>$("#expenseDialog").close();$("#entryType").onchange=updateEntryType;$("#splitPayment").onchange=()=>{updateSplitPayment();updateEntryType()};$("#splitPaymentW").onchange=updateSplitPayment;$("#splitPaymentC").onchange=updateSplitPayment;$("#group").onchange=updateCategories;$("#paidBy").onchange=updatePayment;$("#payment").onchange=updatePayment;$("#recurring").onchange=updateRecurring;$("#filterGroup").onchange=render;$("#totalsGroup").onchange=render;$("#chartFilter").onchange=()=>{renderChart();applyPrivacy()};$("#prevMonth").onclick=()=>{current.setMonth(current.getMonth()-1);render()};$("#nextMonth").onclick=()=>{current.setMonth(current.getMonth()+1);render()};
 
 $("#expenseForm").onsubmit=async e=>{
@@ -347,6 +396,18 @@ function exportCurrentMonth(){
 }
 $("#exportMonth").onclick=exportCurrentMonth;
 
+
+
+function applySystemTheme(){
+ const dark=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches;
+ const meta=document.querySelector('meta[name="theme-color"]');
+ if(meta)meta.setAttribute("content",dark?"#071522":"#0b3a66");
+}
+if(window.matchMedia){
+ const themeMedia=window.matchMedia("(prefers-color-scheme: dark)");
+ if(themeMedia.addEventListener)themeMedia.addEventListener("change",applySystemTheme);
+ else if(themeMedia.addListener)themeMedia.addListener(applySystemTheme);
+}
 
 $("#loginForm").onsubmit=async e=>{
  e.preventDefault();
