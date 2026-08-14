@@ -174,3 +174,9 @@ body.values-hidden .catavg::after{content:"MÉDIA •••";visibility:visible}
  .catvalue-wrap{min-width:150px}
  .catavg{font-size:7.5px;top:18px}
 }
+
+/* v10.6.1 — correção de estrutura após reordenação */
+main > .sec-income,
+main > .sec-history,
+main > .sec-launches{width:100%}
+main > .privacy-note{margin-top:6px;margin-bottom:8px}

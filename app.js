@@ -238,13 +238,12 @@ function render(){
  document.querySelectorAll(".subavg-period").forEach(el=>el.textContent=periodLabel());
 
  const totalsGroup=$("#totalsGroup")?.value||"";
- const visibleCategories=d.categories.map(c=>totalsGroup?{...c,total:Number(c.byGroup?.[totalsGroup]||0),groups:new Set([totalsGroup])}:c).filter(c=>c.total>0);
- const totalsFilter=$("#totalsGroupFilter")?.value||"";
- const categoriesForTotals=totalsFilter
-   ? (()=>{const map=new Map();for(const c of (d.hist?.categories||[])){if(c.group===totalsFilter){const v=map.get(c.category)||{category:c.category,total:0,groups:new Set()};v.total+=Number(c.total||0);v.groups.add(c.group);map.set(c.category,v)}}for(const x of d.expenses.filter(x=>x.group===totalsFilter)){const v=map.get(x.category)||{category:x.category,total:0,groups:new Set()};v.total+=Number(x.amount);v.groups.add(x.group);map.set(x.category,v)}return [...map.values()].sort((a,b)=>b.total-a.total)})()
-   : d.categories;
+ const categoriesForTotals=d.categories
+   .map(c=>totalsGroup?{...c,total:Number(c.byGroup?.[totalsGroup]||0),groups:new Set([totalsGroup])}:c)
+   .filter(c=>c.total>0)
+   .sort((a,b)=>b.total-a.total);
  $("#categoryTotals").innerHTML=categoriesForTotals.length?categoriesForTotals.map(c=>{
-   const avg=categoryAverage(c.category,totalsFilter||null);
+   const avg=categoryAverage(c.category,totalsGroup||null);
    return `<div class="catrow"><div class="catname"><span class="caticon">${ICONS[c.category]||"📌"}</span><span>${c.category.toUpperCase()}<span class="catmeta">${[...c.groups].map(g=>(GROUP_ICON[g]||"•")+" "+g).join(" · ")}</span></span></div><div class="catvalue-wrap"><div class="catvalue">${money(c.total)}</div><div class="catavg">MÉDIA ${periodLabel()} · ${money(avg)}</div></div></div>`;
  }).join(""):`<div class="mini">SEM GASTOS NESTE MÊS.</div>`;
  $("#incomeW").textContent=money(d.income.W);$("#incomeC").textContent=money(d.income.C);$("#incomeTotal").textContent=money(d.income.total);
