@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0b3a66"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="apple-touch-icon" href="icon-192.png"><title>Contas da Casa</title>
-<link rel="manifest" href="manifest.webmanifest"><link rel="stylesheet" href="styles.css?v=105">
+<link rel="manifest" href="manifest.webmanifest"><link rel="stylesheet" href="styles.css?v=106">
 </head>
 <body>
 <div id="authScreen" class="auth-screen">
@@ -64,22 +64,17 @@
   </div>
 </section>
 
-<section class="card sec-launches">
-  <div class="section-title launches-head"><h2>5 · LANÇAMENTOS</h2>
-    <div class="launch-tools">
-      <button id="exportMonth" class="secondary-btn" type="button">⬇ EXPORTAR MÊS</button>
-      <select id="filterGroup">
-      <option value="">TODOS</option><option value="CASAL">CASAL</option><option value="ALICE">ALICE</option>
-      <option value="CONTAS">CONTAS</option><option value="WILLIAM">WILLIAM</option><option value="CAROL">CAROL</option>
-      </select>
-    </div>
-  </div>
-  <div id="historicalNotice" class="history-note hidden">📚 MÊS IMPORTADO DA PLANILHA: OS VALORES HISTÓRICOS SÃO CONSOLIDADOS. LANÇAMENTOS INDIVIDUAIS NÃO FORAM INVENTADOS.</div>
-  <div id="transactions" class="stack"></div>
-</section>
 
+
+
+
+
+<div class="privacy-note">🔒 HISTÓRICO E LANÇAMENTOS FICAM NO BANCO PRIVADO; O GITHUB CONTÉM APENAS O APP.</div>
+</main>
+
+<button id="fab" class="fab">＋</button>
 <section class="card sec-income">
-  <div class="section-title"><h2>6 · RECEITAS</h2><span class="mini">ENTRADAS DO MÊS</span></div>
+  <div class="section-title"><h2>5 · RECEITAS</h2><span class="mini">ENTRADAS DO MÊS</span></div>
   <div class="split">
     <div><span>🧔🏻‍♂️ WILLIAM</span><strong id="incomeW">R$ 0,00</strong></div>
     <div><span>👩🏻 CAROL</span><strong id="incomeC">R$ 0,00</strong></div>
@@ -87,10 +82,9 @@
   <div class="total-line"><span>TOTAL DE RECEITAS</span><strong id="incomeTotal">R$ 0,00</strong></div>
   <div id="incomeBreakdown" class="income-list"></div>
 </section>
-
 <section class="card sec-history">
   <div class="section-title">
-    <h2>7 · GRÁFICOS · <span id="chartYear"></span></h2>
+    <h2>6 · GRÁFICOS · <span id="chartYear"></span></h2>
     <select id="chartFilter">
       <option value="FAMILY">TOTAL FAMÍLIA</option>
       <option value="CONTAS">CONTAS</option>
@@ -107,10 +101,19 @@
   </div>
   <div id="historyChart" class="chart"></div><div id="chartPeriodNote" class="chart-period-note"></div>
 </section>
-<div class="privacy-note">🔒 HISTÓRICO E LANÇAMENTOS FICAM NO BANCO PRIVADO; O GITHUB CONTÉM APENAS O APP.</div>
-</main>
-
-<button id="fab" class="fab">＋</button>
+<section class="card sec-launches">
+  <div class="section-title launches-head"><h2>7 · LANÇAMENTOS</h2>
+    <div class="launch-tools">
+      <button id="exportMonth" class="secondary-btn" type="button">⬇ EXPORTAR MÊS</button>
+      <select id="filterGroup">
+      <option value="">TODOS</option><option value="CASAL">CASAL</option><option value="ALICE">ALICE</option>
+      <option value="CONTAS">CONTAS</option><option value="WILLIAM">WILLIAM</option><option value="CAROL">CAROL</option>
+      </select>
+    </div>
+  </div>
+  <div id="historicalNotice" class="history-note hidden">📚 MÊS IMPORTADO DA PLANILHA: OS VALORES HISTÓRICOS SÃO CONSOLIDADOS. LANÇAMENTOS INDIVIDUAIS NÃO FORAM INVENTADOS.</div>
+  <div id="transactions" class="stack"></div>
+</section>
 <dialog id="expenseDialog">
 <form id="expenseForm">
 <div class="dialog-head"><h2 id="expenseDialogTitle">➕ NOVO LANÇAMENTO</h2><button type="button" id="closeDialog" class="ghost">✕</button></div><div id="editHint" class="edit-hint hidden">✏️ A EDIÇÃO ALTERA SOMENTE ESTE LANÇAMENTO. PARCELAS/RECORRÊNCIAS FUTURAS NÃO SERÃO MODIFICADAS.</div>
@@ -165,5 +168,5 @@
 <button class="primary" type="submit">SALVAR</button>
 </form>
 </dialog>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="history.js?v=105"></script><script src="app.js?v=105"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="history.js?v=106"></script><script src="app.js?v=106"></script>
 </body></html>

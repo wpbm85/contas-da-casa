@@ -142,6 +142,25 @@ function groupAverage(group){
  return keys.reduce((s,k)=>s+Number(buildMonth(k).groups[group]?.total||0),0)/keys.length;
 }
 
+function categoryTotalForMonth(key,category,groupFilter){
+ const d=buildMonth(key);
+ if(!groupFilter){
+   const c=d.categories.find(x=>x.category===category);
+   return Number(c?.total||0);
+ }
+ let total=0;
+ for(const c of (d.hist?.categories||[])){
+   if(c.category===category&&c.group===groupFilter)total+=Number(c.total||0);
+ }
+ total+=d.expenses.filter(x=>x.group===groupFilter&&x.category===category).reduce((s,x)=>s+Number(x.amount),0);
+ return total;
+}
+function categoryAverage(category,groupFilter){
+ const keys=periodKeys();
+ return keys.length?keys.reduce((s,k)=>s+categoryTotalForMonth(k,category,groupFilter),0)/keys.length:0;
+}
+
+
 function chartValue(key,filter){
  const d=buildMonth(key);
  if(filter==="FAMILY")return d.family.total;
@@ -202,7 +221,7 @@ function markMoneyValues(){
    "#cardW","#cardC","#cardTotal",
    "#totalContas","#totalAlice","#totalCasal","#totalWilliam","#totalCarol",
    "#incomeW","#incomeC","#incomeTotal",
-   ".catvalue",".amount",".income-row strong",".bill-detail strong",".total-line strong",".subavg-value"
+   ".catvalue",".catavg",".amount",".income-row strong",".bill-detail strong",".total-line strong",".subavg-value"
  ];
  document.querySelectorAll(selectors.join(",")).forEach(el=>el.classList.add("money-hidden"));
 }
@@ -220,7 +239,14 @@ function render(){
 
  const totalsGroup=$("#totalsGroup")?.value||"";
  const visibleCategories=d.categories.map(c=>totalsGroup?{...c,total:Number(c.byGroup?.[totalsGroup]||0),groups:new Set([totalsGroup])}:c).filter(c=>c.total>0);
- $("#categoryTotals").innerHTML=visibleCategories.length?visibleCategories.map(c=>`<div class="catrow"><div class="catname"><span class="caticon">${ICONS[c.category]||"📌"}</span><span>${c.category.toUpperCase()}<span class="catmeta">${[...c.groups].map(g=>(GROUP_ICON[g]||"•")+" "+g).join(" · ")}</span></span></div><div class="catvalue">${money(c.total)}</div></div>`).join(""):`<div class="mini">SEM GASTOS NESTE MÊS.</div>`;
+ const totalsFilter=$("#totalsGroupFilter")?.value||"";
+ const categoriesForTotals=totalsFilter
+   ? (()=>{const map=new Map();for(const c of (d.hist?.categories||[])){if(c.group===totalsFilter){const v=map.get(c.category)||{category:c.category,total:0,groups:new Set()};v.total+=Number(c.total||0);v.groups.add(c.group);map.set(c.category,v)}}for(const x of d.expenses.filter(x=>x.group===totalsFilter)){const v=map.get(x.category)||{category:x.category,total:0,groups:new Set()};v.total+=Number(x.amount);v.groups.add(x.group);map.set(x.category,v)}return [...map.values()].sort((a,b)=>b.total-a.total)})()
+   : d.categories;
+ $("#categoryTotals").innerHTML=categoriesForTotals.length?categoriesForTotals.map(c=>{
+   const avg=categoryAverage(c.category,totalsFilter||null);
+   return `<div class="catrow"><div class="catname"><span class="caticon">${ICONS[c.category]||"📌"}</span><span>${c.category.toUpperCase()}<span class="catmeta">${[...c.groups].map(g=>(GROUP_ICON[g]||"•")+" "+g).join(" · ")}</span></span></div><div class="catvalue-wrap"><div class="catvalue">${money(c.total)}</div><div class="catavg">MÉDIA ${periodLabel()} · ${money(avg)}</div></div></div>`;
+ }).join(""):`<div class="mini">SEM GASTOS NESTE MÊS.</div>`;
  $("#incomeW").textContent=money(d.income.W);$("#incomeC").textContent=money(d.income.C);$("#incomeTotal").textContent=money(d.income.total);
  const incomeNames={SALARIO:"SALÁRIO",BONUS:"BÔNUS",REEMBOLSO:"REEMBOLSO",VENDA:"VENDA",RESTITUICAO:"RESTITUIÇÃO",OUTROS:"OUTROS"};
  $("#incomeBreakdown").innerHTML=d.income.byCategory.length?d.income.byCategory.map(([k,v])=>`<div class="income-row"><span>${incomeNames[k]||k}</span><strong>${money(v)}</strong></div>`).join(""):`<div class="mini">SEM RECEITAS NESTE MÊS.</div>`;

@@ -1,14 +1,14 @@
-# CONTAS DA CASA — v10.5
+# CONTAS DA CASA — v10.6
 
-Mudanças:
-- modo escuro automático conforme o padrão do celular/PC (`prefers-color-scheme`);
-- gráfico mostra somente JAN até o mês selecionado, limitado ao mês vigente quando a navegação estiver no futuro;
-- gráfico recebe linha de MÉDIA do período;
-- subtotais de CONTAS, ALICE, CASAL, WILLIAM e CAROL mostram média mensal JAN → mês considerado;
-- ícones de pessoas atualizados no mesmo padrão de emoji:
-  - WILLIAM: 🧔🏻‍♂️
-  - CAROL: 👩🏻
-  - ALICE: 👧🏻
-- botão de privacidade e Supabase preservados.
-
-Não há alteração de banco nem necessidade de SQL.
+- Médias por categoria no item 3 TOTAIS, de JAN até o mês considerado.
+- Média aparece sob o valor, aproveitando a segunda linha já existente, sem aumentar a altura.
+- O filtro TODOS/CONTAS/ALICE/CASAL/WILLIAM/CAROL recalcula também a média.
+- Nova ordem:
+  1 TOTAL FAMÍLIA
+  2 FATURA
+  3 TOTAIS
+  4 SUBTOTAIS
+  5 RECEITAS
+  6 GRÁFICOS
+  7 LANÇAMENTOS
+- Dark mode, privacidade e Supabase preservados.
