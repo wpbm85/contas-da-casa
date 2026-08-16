@@ -311,9 +311,19 @@ function updateEntryType(){
  $("#thirdPartyNote").classList.toggle("hidden",!third);
  $("#splitPaymentToggle").classList.toggle("hidden",!expense);
  $("#recurring").closest("label").classList.toggle("hidden",inc||third||($("#splitPayment").checked&&expense));
- if(inc)$("#cardFields").classList.add("hidden");
- else if(third){$("#splitPayment").checked=false;$("#expensePaymentFields").classList.add("hidden");$("#cardFields").classList.remove("hidden");$("#cardLabel").classList.remove("hidden")}
- else {updatePayment();updateSplitPayment()}
+ if(inc){
+   $("#expensePaymentFields").classList.add("hidden");
+   $("#cardFields").classList.add("hidden");
+   $("#splitPaymentFields").classList.add("hidden");
+ }else if(third){
+   $("#splitPayment").checked=false;
+   $("#expensePaymentFields").classList.add("hidden");
+   $("#cardFields").classList.remove("hidden");
+   $("#cardLabel").classList.remove("hidden");
+ }else{
+   updatePayment();
+   updateSplitPayment();
+ }
 }
 function openEdit(id){
  const x=loadNorm().find(t=>t.id===id);if(!x)return;editingId=id;$("#expenseForm").reset();$("#expenseDialogTitle").textContent="✏️ EDITAR LANÇAMENTO";$("#editHint").classList.remove("hidden");$("#entryType").value=x.entryType||"EXPENSE";$("#amount").value=x.amount;$("#description").value=(x.description===x.category?"":x.description);$("#date").value=x.date;

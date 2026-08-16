@@ -1,10 +1,9 @@
-# CONTAS DA CASA — v10.6.1
+# CONTAS DA CASA — v10.6.3
 
-Correções:
-- quadros 5 RECEITAS, 6 GRÁFICOS e 7 LANÇAMENTOS voltaram para dentro do container principal e para o mesmo padrão visual dos itens 1–4;
-- aviso de privacidade voltou para o final, depois do item 7;
-- filtro do item 3 TOTAIS corrigido (TODOS / CONTAS / ALICE / CASAL / WILLIAM / CAROL);
-- médias por categoria continuam acompanhando o grupo selecionado;
-- dark mode, médias, privacidade e Supabase preservados.
-
-Não há alteração no banco nem necessidade de SQL.
+Ajustes de interface:
+- TOTAL FAMÍLIA: rótulos agora são apenas WILLIAM e CAROL (sem “PAGOU”), evitando conflito visual com “TEM A RECEBER”.
+- “TEM A RECEBER” ficou compacto, sem ocupar desnecessariamente toda a largura.
+- “EXPORTAR MÊS” foi reposicionado junto ao título de LANÇAMENTOS; filtro de grupo permanece separado.
+- opção de pagamento dividido foi movida para o fim do formulário, após “REPETIR MENSALMENTE”.
+- novo texto: “CAROL E WILLIAM PAGARAM”.
+- lógica, banco, histórico e Supabase permanecem inalterados.

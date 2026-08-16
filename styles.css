@@ -180,3 +180,20 @@ main > .sec-income,
 main > .sec-history,
 main > .sec-launches{width:100%}
 main > .privacy-note{margin-top:6px;margin-bottom:8px}
+
+/* v10.6.3 — pequenos ajustes de hierarquia */
+.sec-family .settlement{display:inline-flex;width:auto;max-width:100%;padding:8px 12px;margin-top:10px}
+.launches-head{align-items:flex-start}
+.launch-title-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.launch-title-row h2{margin:0}
+.launch-title-row .secondary-btn{width:auto;flex:none}
+.launch-tools{margin-left:auto}
+.split-payment-last{margin-top:14px}
+@media(max-width:520px){
+  .launches-head{flex-direction:column;gap:10px}
+  .launch-title-row{width:100%;justify-content:space-between}
+  .launch-title-row .secondary-btn{flex:none;width:auto}
+  .launch-tools{width:100%;margin-left:0;justify-content:flex-end}
+  .launch-tools select{flex:0 1 50%}
+  .sec-family .settlement{font-size:12px}
+}
