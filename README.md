@@ -1,9 +1,19 @@
-# CONTAS DA CASA — v10.6.3
+# CONTAS DA CASA — v10.6.4
 
-Ajustes de interface:
-- TOTAL FAMÍLIA: rótulos agora são apenas WILLIAM e CAROL (sem “PAGOU”), evitando conflito visual com “TEM A RECEBER”.
-- “TEM A RECEBER” ficou compacto, sem ocupar desnecessariamente toda a largura.
-- “EXPORTAR MÊS” foi reposicionado junto ao título de LANÇAMENTOS; filtro de grupo permanece separado.
-- opção de pagamento dividido foi movida para o fim do formulário, após “REPETIR MENSALMENTE”.
-- novo texto: “CAROL E WILLIAM PAGARAM”.
-- lógica, banco, histórico e Supabase permanecem inalterados.
+Ajustes solicitados:
+- EXPORTAR MÊS foi movido para o item 1 TOTAL FAMÍLIA.
+- acerto agora aparece como “WILLIAM RECEBE ...” ou “CAROL RECEBE ...”.
+- item 3: removido o texto “POR CATEGORIA”; seletor reposicionado junto ao título.
+- item 7: removido EXPORTAR MÊS; filtro reposicionado junto ao título.
+- formulário reorganizado:
+  VALOR
+  DESCRIÇÃO
+  CATEGORIA
+  DATA / GRUPO
+  PAGO POR / PAGAMENTO / PARCELAS
+  REPETIR MENSALMENTE
+  CAROL E WILLIAM PAGARAM
+  TIPO
+  SALVAR
+- removido “(OPCIONAL)” da descrição em todos os tipos.
+- lógica, banco, histórico e Supabase preservados.

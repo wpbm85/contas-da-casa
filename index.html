@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0b3a66"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="apple-touch-icon" href="icon-192.png"><title>Contas da Casa</title>
-<link rel="manifest" href="manifest.webmanifest"><link rel="stylesheet" href="styles.css?v=1063">
+<link rel="manifest" href="manifest.webmanifest"><link rel="stylesheet" href="styles.css?v=1064">
 </head>
 <body>
 <div id="authScreen" class="auth-screen">
@@ -36,7 +36,7 @@
 </header>
 <main>
 <section class="card sec-family">
-  <h2>1 · TOTAL FAMÍLIA</h2>
+  <div class="section-title family-head"><h2>1 · TOTAL FAMÍLIA</h2><button id="exportMonth" class="secondary-btn family-export" type="button">⬇ EXPORTAR MÊS</button></div>
   <div class="big" id="familyTotal">R$ 0,00</div>
   <div class="split"><div><span>🧔🏻‍♂️ WILLIAM</span><strong id="wPaid"></strong></div><div><span>👩🏻 CAROL</span><strong id="cPaid"></strong></div></div>
   <div class="settlement" id="settlement"></div>
@@ -49,7 +49,7 @@
 </section>
 
 <section class="card sec-totals">
-  <div class="section-title"><h2>3 · TOTAIS</h2><div class="totals-tools"><span class="mini">POR CATEGORIA</span><select id="totalsGroup"><option value="">TODOS</option><option value="CONTAS">CONTAS</option><option value="ALICE">ALICE</option><option value="CASAL">CASAL</option><option value="WILLIAM">WILLIAM</option><option value="CAROL">CAROL</option></select></div></div>
+  <div class="section-title totals-head"><h2>3 · TOTAIS</h2><div class="totals-tools"><select id="totalsGroup"><option value="">TODOS</option><option value="CONTAS">CONTAS</option><option value="ALICE">ALICE</option><option value="CASAL">CASAL</option><option value="WILLIAM">WILLIAM</option><option value="CAROL">CAROL</option></select></div></div>
   <div id="categoryTotals" class="category-list"></div>
 </section>
 
@@ -103,7 +103,7 @@
 
 <section class="card sec-launches">
   <div class="section-title launches-head">
-    <div class="launch-title-row"><h2>7 · LANÇAMENTOS</h2><button id="exportMonth" class="secondary-btn" type="button">⬇ EXPORTAR MÊS</button></div>
+    <h2>7 · LANÇAMENTOS</h2>
     <div class="launch-tools">
       <select id="filterGroup">
       <option value="">TODOS</option><option value="CASAL">CASAL</option><option value="ALICE">ALICE</option>
@@ -124,20 +124,19 @@
 
 <dialog id="expenseDialog">
 <form id="expenseForm">
-<div class="dialog-head"><h2 id="expenseDialogTitle">➕ NOVO LANÇAMENTO</h2><button type="button" id="closeDialog" class="ghost">✕</button></div><div id="editHint" class="edit-hint hidden">✏️ A EDIÇÃO ALTERA SOMENTE ESTE LANÇAMENTO. PARCELAS/RECORRÊNCIAS FUTURAS NÃO SERÃO MODIFICADAS.</div>
-<label>🧭 TIPO
-<select id="entryType">
-  <option value="EXPENSE">DESPESA</option>
-  <option value="INCOME">RECEITA</option>
-  <option value="THIRD_PARTY">💳 TERCEIROS / REEMBOLSÁVEL</option>
-</select>
-</label>
+<div class="dialog-head"><h2 id="expenseDialogTitle">➕ NOVO LANÇAMENTO</h2><button type="button" id="closeDialog" class="ghost">✕</button></div>
+<div id="editHint" class="edit-hint hidden">✏️ A EDIÇÃO ALTERA SOMENTE ESTE LANÇAMENTO. PARCELAS/RECORRÊNCIAS FUTURAS NÃO SERÃO MODIFICADAS.</div>
+
 <label>💰 VALOR<input id="amount" type="number" min=".01" step=".01" required placeholder="0,00"></label>
-<label>📝 DESCRIÇÃO <span class="optional">(OPCIONAL)</span><input id="description" maxlength="80" placeholder="Ex.: Pão de Açúcar"></label>
+
+<label>📝 DESCRIÇÃO<input id="description" maxlength="80" placeholder="Ex.: Pão de Açúcar"></label>
+
+<label id="categoryLabel" class="category-primary">🏷️ CATEGORIA<select id="category"></select></label>
+
 <div class="row"><label>📅 DATA<input id="date" type="date" required></label><label id="groupLabel">🗂️ GRUPO<select id="group">
 <option value="CASAL">💞 CASAL</option><option value="ALICE">👧🏻 ALICE</option><option value="CONTAS">🏠 CONTAS</option>
 <option value="WILLIAM">🧔🏻‍♂️ WILLIAM</option><option value="CAROL">👩🏻 CAROL</option></select></label></div>
-<label id="categoryLabel" class="category-primary">🏷️ CATEGORIA<select id="category"></select></label>
+
 <div id="incomeFields" class="hidden subbox">
   <label>💵 RECEITA
     <select id="incomeCategory">
@@ -153,8 +152,20 @@
     <select id="receivedBy"><option value="W">WILLIAM</option><option value="C">CAROL</option></select>
   </label>
 </div>
-<div id="expensePaymentFields" class="row"><label>🙋 PAGO POR<select id="paidBy"><option value="W">WILLIAM</option><option value="C">CAROL</option></select></label>
-<label>💵 PAGAMENTO<select id="payment"><option value="CARD">💳 CARTÃO</option><option value="$">$ CASH</option></select></label></div>
+
+<div id="expensePaymentFields" class="payment-row">
+  <label>🙋 PAGO POR<select id="paidBy"><option value="W">WILLIAM</option><option value="C">CAROL</option></select></label>
+  <label>💵 PAGAMENTO<select id="payment"><option value="CARD">💳 CARTÃO</option><option value="$">$ CASH</option></select></label>
+  <label id="installmentField">🔢 PARCELAS<input id="installments" type="number" min="1" max="60" value="1"></label>
+</div>
+
+<div id="thirdPartyNote" class="hidden edit-hint">💳 ESTE VALOR ENTRA NA FATURA, MAS NÃO ENTRA EM GASTOS, CATEGORIAS OU ACERTO WILLIAM × CAROL.</div>
+<div id="cardFields" class="hidden subbox"><label id="cardLabel">💳 CARTÃO<select id="card"><option value="W">CARTÃO WILLIAM</option><option value="C">CARTÃO CAROL</option></select></label></div>
+
+<label class="checkline"><input id="recurring" type="checkbox"><span>🔁 REPETIR MENSALMENTE</span></label>
+<div id="recurringFields" class="hidden subbox"><label>⏳ REPETIR ATÉ<input id="recurringUntil" type="month"></label></div>
+
+<label id="splitPaymentToggle" class="checkline split-payment-last"><input id="splitPayment" type="checkbox"><span>✂️ CAROL E WILLIAM PAGARAM</span></label>
 <div id="splitPaymentFields" class="hidden subbox">
   <div class="split-pay-title">PARTE DE WILLIAM</div>
   <div class="split-pay-grid">
@@ -168,13 +179,17 @@
   </div>
   <div class="split-pay-note">A soma de WILLIAM + CAROL deve ser igual ao valor total. Pagamento dividido é tratado como lançamento único.</div>
 </div>
-<div id="thirdPartyNote" class="hidden edit-hint">💳 ESTE VALOR ENTRA NA FATURA, MAS NÃO ENTRA EM GASTOS, CATEGORIAS OU ACERTO WILLIAM × CAROL.</div>
-<div id="cardFields" class="hidden subbox"><div class="row"><label id="cardLabel">💳 CARTÃO<select id="card"><option value="W">CARTÃO WILLIAM</option><option value="C">CARTÃO CAROL</option></select></label><label>🔢 PARCELAS<input id="installments" type="number" min="1" max="60" value="1"></label></div></div>
-<label class="checkline"><input id="recurring" type="checkbox"><span>🔁 REPETIR MENSALMENTE</span></label>
-<div id="recurringFields" class="hidden subbox"><label>⏳ REPETIR ATÉ<input id="recurringUntil" type="month"></label></div>
-<label id="splitPaymentToggle" class="checkline split-payment-last"><input id="splitPayment" type="checkbox"><span>✂️ CAROL E WILLIAM PAGARAM</span></label>
+
+<label class="entry-type-last">🧭 TIPO
+<select id="entryType">
+  <option value="EXPENSE">DESPESA</option>
+  <option value="INCOME">RECEITA</option>
+  <option value="THIRD_PARTY">💳 TERCEIROS / REEMBOLSÁVEL</option>
+</select>
+</label>
+
 <button class="primary" type="submit">SALVAR</button>
 </form>
 </dialog>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="history.js?v=1063"></script><script src="app.js?v=1063"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="history.js?v=1064"></script><script src="app.js?v=1064"></script>
 </body></html>

@@ -197,3 +197,24 @@ main > .privacy-note{margin-top:6px;margin-bottom:8px}
   .launch-tools select{flex:0 1 50%}
   .sec-family .settlement{font-size:12px}
 }
+
+/* v10.6.4 — layout refinado */
+.family-head,.totals-head,.launches-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.family-head h2,.totals-head h2,.launches-head h2{margin:0}
+.family-export{margin-left:auto;white-space:nowrap}
+.totals-tools{margin-left:auto}
+.totals-tools select{min-width:150px}
+.launch-tools{margin-left:auto}
+.launch-tools select{min-width:150px}
+.payment-row{display:grid;grid-template-columns:1fr 1fr .78fr;gap:10px}
+.payment-row label{min-width:0}
+.entry-type-last{margin-top:15px}
+.sec-family .settlement{display:inline-flex;width:auto;max-width:100%;padding:8px 12px;margin-top:10px}
+@media(max-width:520px){
+  .family-head,.totals-head,.launches-head{flex-direction:row;align-items:center}
+  .family-export{font-size:9px;padding:7px 8px}
+  .totals-tools,.launch-tools{width:auto;margin-left:auto}
+  .totals-tools select,.launch-tools select{min-width:135px;width:135px}
+  .payment-row{grid-template-columns:1fr 1fr}
+  .payment-row #installmentField{grid-column:1/-1}
+}

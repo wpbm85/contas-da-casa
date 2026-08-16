@@ -229,7 +229,7 @@ function render(){
  const key=mkey(current),d=buildMonth(key);
  $("#monthTitle").textContent=current.toLocaleDateString("pt-BR",{month:"long",year:"numeric"}).toUpperCase();
  $("#familyTotal").textContent=money(d.family.total);$("#wPaid").textContent=money(d.family.W);$("#cPaid").textContent=money(d.family.C);
- $("#settlement").textContent=Math.abs(d.williamReceives)<.005?"SEM ACERTO NO MÊS":d.williamReceives>0?`WILLIAM TEM A RECEBER ${money(d.williamReceives)}`:`CAROL TEM A RECEBER ${money(-d.williamReceives)}`;
+ $("#settlement").textContent=Math.abs(d.williamReceives)<.005?"SEM ACERTO NO MÊS":d.williamReceives>0?`WILLIAM RECEBE ${money(d.williamReceives)}`:`CAROL RECEBE ${money(-d.williamReceives)}`;
  $("#cardW").textContent=money(d.cards.W);$("#cardC").textContent=money(d.cards.C);$("#cardTotal").textContent=money(d.cards.W+d.cards.C);
  const cardSection=$("#cardTotal").closest(".card");let old=cardSection.querySelector(".bill-detail-wrap");if(old)old.remove();let detail=document.createElement("div");detail.className="bill-detail-wrap";detail.innerHTML=`<div class="bill-detail"><span>COMPRAS PRÓPRIAS</span><strong>${money(d.cards.ownW+d.cards.ownC)}</strong></div><div class="bill-detail"><span>TERCEIROS</span><strong>${money(d.cards.thirdW+d.cards.thirdC)}</strong></div>`;cardSection.appendChild(detail);
  $("#totalContas").textContent=money(d.groups.CONTAS.total);$("#totalAlice").textContent=money(d.groups.ALICE.total);$("#totalCasal").textContent=money(d.groups.CASAL.total);$("#totalWilliam").textContent=money(d.groups.WILLIAM.total);$("#totalCarol").textContent=money(d.groups.CAROL.total);
@@ -289,7 +289,8 @@ function orderedCategories(group){
 function updateCategories(){let g=$("#group").value,ordered=orderedCategories(g);$("#category").innerHTML=ordered.map(c=>`<option value="${c}">${ICONS[c]||"📌"} ${c}</option>`).join("");if(g==="CASAL")$("#category").value="RESTAURANTES"}
 function updatePayment(){
  const isCard=$("#payment").value==="CARD";
- $("#cardFields").classList.toggle("hidden",!isCard);
+ $("#installmentField").classList.toggle("hidden",!isCard);
+ $("#cardFields").classList.add("hidden");
  $("#cardLabel").classList.add("hidden");
  if(isCard) $("#card").value=$("#paidBy").value;
 }
@@ -300,6 +301,7 @@ function updateSplitPayment(){
  $("#expensePaymentFields").classList.toggle("hidden",split||$("#entryType").value!=="EXPENSE");
  if(split){
    $("#cardFields").classList.add("hidden");
+   $("#installmentField").classList.add("hidden");
    $("#recurring").checked=false;$("#recurringFields").classList.add("hidden");
  }
 }
@@ -313,14 +315,17 @@ function updateEntryType(){
  $("#recurring").closest("label").classList.toggle("hidden",inc||third||($("#splitPayment").checked&&expense));
  if(inc){
    $("#expensePaymentFields").classList.add("hidden");
+   $("#installmentField").classList.add("hidden");
    $("#cardFields").classList.add("hidden");
    $("#splitPaymentFields").classList.add("hidden");
  }else if(third){
    $("#splitPayment").checked=false;
    $("#expensePaymentFields").classList.add("hidden");
+   $("#installmentField").classList.remove("hidden");
    $("#cardFields").classList.remove("hidden");
    $("#cardLabel").classList.remove("hidden");
  }else{
+   $("#expensePaymentFields").classList.remove("hidden");
    updatePayment();
    updateSplitPayment();
  }
