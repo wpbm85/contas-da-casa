@@ -218,3 +218,15 @@ main > .privacy-note{margin-top:6px;margin-bottom:8px}
   .payment-row{grid-template-columns:1fr 1fr}
   .payment-row #installmentField{grid-column:1/-1}
 }
+
+/* v10.6.5 — ordenação e total da categoria nos lançamentos */
+.tx-cat-total{
+  margin-top:3px;
+  font-size:9px;
+  line-height:1.15;
+  font-weight:750;
+  color:var(--muted);
+}
+.tx-cat-total-value{font-weight:850}
+body.values-hidden .tx-cat-total-value{visibility:hidden}
+body.values-hidden .tx-cat-total-value::after{content:"R$ •••";visibility:visible}

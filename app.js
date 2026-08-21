@@ -30,7 +30,7 @@ function normalizeLegacy(x){
 }
 function loadNorm(){return load().map(x=>normalizeLegacy({...x}))}
 function dbToApp(r){
- return {id:r.id,purchaseId:r.purchase_id,entryType:r.entry_type,description:r.description||"",group:r.grupo,category:r.categoria,paidBy:r.paid_by,payment:r.payment==="CASH"?"$":r.payment,card:r.card,paymentSplit:r.payment_split||null,incomeCategory:r.income_category,receivedBy:r.received_by,amount:Number(r.amount),date:r.data,competence:r.competence,installmentLabel:r.installment_label,recurringLabel:r.recurring_label};
+ return {id:r.id,purchaseId:r.purchase_id,entryType:r.entry_type,description:r.description||"",group:r.grupo,category:r.categoria,paidBy:r.paid_by,payment:r.payment==="CASH"?"$":r.payment,card:r.card,paymentSplit:r.payment_split||null,incomeCategory:r.income_category,receivedBy:r.received_by,amount:Number(r.amount),date:r.data,competence:r.competence,installmentLabel:r.installment_label,recurringLabel:r.recurring_label,createdAt:r.created_at||null};
 }
 function appToDb(x){
  const split=x.entryType==="EXPENSE"&&x.paymentSplit?x.paymentSplit:null;
@@ -59,7 +59,7 @@ function setSync(t){const el=$("#syncStatus");if(el)el.textContent=t}
 async function refreshRemote(){
  setSync("☁️ SINCRONIZANDO...");
  const [launchRes,histRes]=await Promise.all([
-   db.from("lancamentos").select("*").order("data",{ascending:true}),
+   db.from("lancamentos").select("*").order("data",{ascending:false}).order("created_at",{ascending:false}),
    db.from("historico_mensal").select("competence,payload").order("competence",{ascending:true})
  ]);
  if(launchRes.error){console.error(launchRes.error);setSync("⚠️ ERRO");return false}
@@ -221,7 +221,7 @@ function markMoneyValues(){
    "#cardW","#cardC","#cardTotal",
    "#totalContas","#totalAlice","#totalCasal","#totalWilliam","#totalCarol",
    "#incomeW","#incomeC","#incomeTotal",
-   ".catvalue",".catavg",".amount",".income-row strong",".bill-detail strong",".total-line strong",".subavg-value"
+   ".catvalue",".catavg",".amount",".tx-cat-total-value",".income-row strong",".bill-detail strong",".total-line strong",".subavg-value"
  ];
  document.querySelectorAll(selectors.join(",")).forEach(el=>el.classList.add("money-hidden"));
 }
@@ -255,7 +255,13 @@ function render(){
    if(filter==="WILLIAM") return (x.entryType==="EXPENSE"&&x.group==="WILLIAM") || (x.entryType==="INCOME"&&x.receivedBy==="W") || (x.entryType==="THIRD_PARTY"&&x.card==="W");
    if(filter==="CAROL") return (x.entryType==="EXPENSE"&&x.group==="CAROL") || (x.entryType==="INCOME"&&x.receivedBy==="C") || (x.entryType==="THIRD_PARTY"&&x.card==="C");
    return x.entryType==="EXPENSE"&&x.group===filter;
- }).sort((a,b)=>b.date.localeCompare(a.date));
+ }).sort((a,b)=>{
+   const byDate=b.date.localeCompare(a.date);
+   if(byDate!==0)return byDate;
+   const ca=a.createdAt?Date.parse(a.createdAt):0,cb=b.createdAt?Date.parse(b.createdAt):0;
+   if(cb!==ca)return cb-ca;
+   return String(b.id||"").localeCompare(String(a.id||""));
+ });
  if(shown.length){
    $("#transactions").innerHTML=shown.map(x=>{
      const inc=x.entryType==="INCOME";
@@ -272,7 +278,13 @@ function render(){
          : `PAGO POR ${personName(x.paidBy)} · ${x.payment==="CARD"?"💳 CARTÃO "+personName(x.card):"$ CASH"}`;
        meta=`${GROUP_ICON[x.group]} ${x.group} · ${x.category} · ${x.date.split("-").reverse().join("/")} · ${paymentText}${x.installmentLabel?" · "+x.installmentLabel:""}${x.recurringLabel?" · 🔁 "+x.recurringLabel:""}`;
      }
-     return `<div class="tx"><div><strong>${icon} ${x.description}</strong><div class="meta">${meta}</div></div><div class="amount">${money(Number(x.amount))}<div class="tx-actions"><button class="action-btn action-edit" data-edit="${x.id}">✏ EDITAR</button><button class="action-btn action-delete" data-del="${x.id}">🗑 EXCLUIR</button></div></div></div>`;
+     const categoryTotal=x.entryType==="EXPENSE"
+       ? Number(d.categories.find(c=>c.category===x.category)?.total||0)
+       : null;
+     const categoryTotalLine=x.entryType==="EXPENSE"
+       ? `<div class="tx-cat-total">TOTAL ${x.category} · <span class="tx-cat-total-value">${money(categoryTotal)}</span></div>`
+       : "";
+     return `<div class="tx"><div><strong>${icon} ${x.description}</strong><div class="meta">${meta}</div>${categoryTotalLine}</div><div class="amount">${money(Number(x.amount))}<div class="tx-actions"><button class="action-btn action-edit" data-edit="${x.id}">✏ EDITAR</button><button class="action-btn action-delete" data-del="${x.id}">🗑 EXCLUIR</button></div></div></div>`;
    }).join("");
  }else{
    $("#transactions").innerHTML='<div class="mini">SEM LANÇAMENTOS NESTE MÊS.</div>';

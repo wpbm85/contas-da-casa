@@ -1,19 +1,14 @@
-# CONTAS DA CASA — v10.6.4
+# CONTAS DA CASA — v10.6.5
 
-Ajustes solicitados:
-- EXPORTAR MÊS foi movido para o item 1 TOTAL FAMÍLIA.
-- acerto agora aparece como “WILLIAM RECEBE ...” ou “CAROL RECEBE ...”.
-- item 3: removido o texto “POR CATEGORIA”; seletor reposicionado junto ao título.
-- item 7: removido EXPORTAR MÊS; filtro reposicionado junto ao título.
-- formulário reorganizado:
-  VALOR
-  DESCRIÇÃO
-  CATEGORIA
-  DATA / GRUPO
-  PAGO POR / PAGAMENTO / PARCELAS
-  REPETIR MENSALMENTE
-  CAROL E WILLIAM PAGARAM
-  TIPO
-  SALVAR
-- removido “(OPCIONAL)” da descrição em todos os tipos.
-- lógica, banco, histórico e Supabase preservados.
+Mudanças:
+- LANÇAMENTOS agora são ordenados por data decrescente;
+- dentro do mesmo dia, o lançamento criado mais recentemente aparece primeiro;
+- cada DESPESA mostra uma segunda linha: TOTAL <CATEGORIA> · R$ ...
+  usando o total mensal da categoria no item 3;
+- receitas e terceiros não exibem essa linha de categoria;
+- privacidade continua mascarando também o novo total.
+
+Para garantir a ordem de criação dentro do mesmo dia, execute UMA VEZ:
+`SUPABASE_V10_6_5_CREATED_AT.sql`
+
+O SQL apenas adiciona `created_at` se ainda não existir e cria um índice.

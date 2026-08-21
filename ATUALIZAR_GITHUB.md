@@ -1,8 +1,10 @@
-# Atualizar para v10.5
+# Atualizar v10.6.5
 
-1. GitHub > Add file > Upload files.
-2. Envie todos os arquivos deste pacote para a raiz, substituindo os atuais.
-3. Commit sugerido: `Dark mode e médias v10.5`.
-4. Aguarde o GitHub Pages atualizar e reabra o PWA.
+1. Supabase > SQL Editor:
+   execute `SUPABASE_V10_6_5_CREATED_AT.sql` uma vez.
+2. GitHub > Add file > Upload files:
+   suba todos os arquivos desta versão.
+3. Commit sugerido:
+   `Ordena lançamentos e mostra total da categoria v10.6.5`
 
-Não execute SQL e não altere o Supabase.
+Observação: lançamentos novos terão ordenação exata por horário de criação. Se a coluna ainda não existia, registros antigos recebem o mesmo timestamp de migração; nesses empates antigos o ID serve apenas como desempate estável.
