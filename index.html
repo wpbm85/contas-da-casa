@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b3a66"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="apple-touch-icon" href="icon-192.png"><title>Contas da Casa</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"><link rel="stylesheet" href="styles.css?v=1071">
+</head>
+<body>
+<div id="authScreen" class="auth-screen">
+  <div class="auth-card">
+    <div class="auth-brand"><i class="fa-solid fa-wallet"></i> CONTAS DA CASA</div>
+    <h2>ENTRAR</h2>
+    <p class="auth-help">Acesso restrito.</p>
+    <form id="loginForm">
+      <label><i class="fa-solid fa-envelope"></i> E-MAIL<input id="loginEmail" type="email" autocomplete="username" required></label>
+      <label><i class="fa-solid fa-key"></i> SENHA<input id="loginPassword" type="password" autocomplete="current-password" required></label>
+      <button class="primary" type="submit">ENTRAR</button>
+      <div id="loginError" class="auth-error hidden"></div>
+    </form>
+  </div>
+</div>
+<div id="syncBar" class="sync-bar hidden">
+  <span id="syncUser"></span><span id="syncStatus"><i class="fa-solid fa-cloud"></i> SINCRONIZADO</span>
+  <button id="logoutBtn" type="button">SAIR</button>
+</div>
+<div id="migrationBanner" class="migration-banner hidden">
+  <div><strong>📦 DADOS LOCAIS ENCONTRADOS</strong><br><span id="migrationText"></span></div>
+  <div class="migration-actions">
+    <button id="migrateLocalBtn" class="secondary-btn" type="button">MIGRAR PARA O BANCO</button>
+    <button id="dismissMigrationBtn" class="ghost-small" type="button">IGNORAR</button>
+  </div>
+</div>
+<header class="topbar">
+  <div><div class="eyebrow">CONTAS DA CASA</div><h1 id="monthTitle"></h1></div>
+  <div class="month-nav"><button id="privacyToggle" class="privacy-toggle" type="button" aria-label="Mostrar valores" title="Mostrar valores"><i class="fa-solid fa-lock"></i></button><button id="prevMonth">‹</button><button id="nextMonth">›</button></div>
+</header>
+<main>
+<section class="card sec-family">
+  <div class="section-title family-head"><h2><i class="fa-solid fa-house"></i> 1 · TOTAL FAMÍLIA</h2><button id="exportMonth" class="secondary-btn family-export" type="button"><i class="fa-solid fa-file-excel"></i> EXPORTAR MÊS</button></div>
+  <div class="big" id="familyTotal">R$ 0,00</div>
+  <div class="split"><div><span>WILLIAM</span><strong id="wPaid"></strong></div><div><span>CAROL</span><strong id="cPaid"></strong></div></div>
+  <div class="settlement" id="settlement"></div>
+</section>
+
+<section class="card sec-card">
+  <h2><i class="fa-solid fa-credit-card"></i> 2 · FATURA</h2>
+  <div class="split"><div><span>CARTÃO WILLIAM</span><strong id="cardW"></strong></div><div><span>CARTÃO CAROL</span><strong id="cardC"></strong></div></div>
+  <div class="total-line"><span>TOTAL DAS FATURAS</span><strong id="cardTotal"></strong></div>
+</section>
+
+<section class="card sec-totals">
+  <div class="section-title totals-head"><h2><i class="fa-solid fa-chart-pie"></i> 3 · TOTAIS</h2><div class="totals-tools"><select id="totalsGroup"><option value="">TODOS</option><option value="CONTAS">CONTAS</option><option value="ALICE">ALICE</option><option value="CASAL">CASAL</option><option value="WILLIAM">WILLIAM</option><option value="CAROL">CAROL</option></select></div></div>
+  <div id="categoryTotals" class="category-list"></div>
+</section>
+
+<section class="card sec-subtotals">
+  <h2><i class="fa-solid fa-layer-group"></i> 4 · SUBTOTAIS</h2>
+  <div class="subgrid">
+    <div class="subtile contas"><span>CONTAS</span><strong id="totalContas"></strong><small class="subavg">MÉDIA <span class="subavg-period"></span> · <b id="avgContas" class="subavg-value"></b></small></div>
+    <div class="subtile alice"><span>ALICE</span><strong id="totalAlice"></strong><small class="subavg">MÉDIA <span class="subavg-period"></span> · <b id="avgAlice" class="subavg-value"></b></small></div>
+    <div class="subtile casal"><span>CASAL</span><strong id="totalCasal"></strong><small class="subavg">MÉDIA <span class="subavg-period"></span> · <b id="avgCasal" class="subavg-value"></b></small></div>
+    <div class="subtile william"><span>WILLIAM</span><strong id="totalWilliam"></strong><small class="subavg">MÉDIA <span class="subavg-period"></span> · <b id="avgWilliam" class="subavg-value"></b></small></div>
+    <div class="subtile carol"><span>CAROL</span><strong id="totalCarol"></strong><small class="subavg">MÉDIA <span class="subavg-period"></span> · <b id="avgCarol" class="subavg-value"></b></small></div>
+  </div>
+</section>
+
+
+
+
+
+
+
+
+<section class="card sec-income">
+  <div class="section-title"><h2><i class="fa-solid fa-arrow-trend-up"></i> 5 · RECEITAS</h2><span class="mini">ENTRADAS DO MÊS</span></div>
+  <div class="split">
+    <div><span>WILLIAM</span><strong id="incomeW">R$ 0,00</strong></div>
+    <div><span>CAROL</span><strong id="incomeC">R$ 0,00</strong></div>
+  </div>
+  <div class="total-line"><span>TOTAL DE RECEITAS</span><strong id="incomeTotal">R$ 0,00</strong></div>
+  <div id="incomeBreakdown" class="income-list"></div>
+</section>
+
+<section class="card sec-history">
+  <div class="section-title">
+    <h2><i class="fa-solid fa-chart-line"></i> 6 · GRÁFICOS · <span id="chartYear"></span></h2>
+    <select id="chartFilter">
+      <option value="FAMILY">TOTAL FAMÍLIA</option>
+      <option value="CONTAS">CONTAS</option>
+      <option value="ALICE">ALICE</option>
+      <option value="CASAL">CASAL</option>
+      <option value="WILLIAM">WILLIAM</option>
+      <option value="CAROL">CAROL</option>
+      <option value="CARDS">FATURAS</option>
+      <option value="INCOME">RECEITAS</option>
+      <option value="SALARY_W">SALÁRIO WILLIAM</option>
+      <option value="SALARY_C">SALÁRIO CAROL</option>
+      <option value="NET">SALDO (RECEITAS - GASTOS)</option>
+    </select>
+  </div>
+  <div id="historyChart" class="chart"></div><div id="chartPeriodNote" class="chart-period-note"></div>
+</section>
+
+<section class="card sec-launches">
+  <div class="section-title launches-head">
+    <h2><i class="fa-solid fa-list-check"></i> 7 · LANÇAMENTOS</h2>
+    <div class="launch-tools">
+      <select id="filterGroup">
+      <option value="">TODOS</option><option value="CASAL">CASAL</option><option value="ALICE">ALICE</option>
+      <option value="CONTAS">CONTAS</option><option value="WILLIAM">WILLIAM</option><option value="CAROL">CAROL</option>
+      </select>
+    </div>
+  </div>
+  <div id="historicalNotice" class="history-note hidden">📚 MÊS IMPORTADO DA PLANILHA: OS VALORES HISTÓRICOS SÃO CONSOLIDADOS. LANÇAMENTOS INDIVIDUAIS NÃO FORAM INVENTADOS.</div>
+  <div id="transactions" class="stack"></div>
+</section>
+
+<div class="privacy-note">🔒 HISTÓRICO E LANÇAMENTOS FICAM NO BANCO PRIVADO; O GITHUB CONTÉM APENAS O APP.</div>
+</main>
+
+<button id="fab" class="fab">＋</button>
+
+
+
+<dialog id="expenseDialog">
+<form id="expenseForm">
+<div class="dialog-head"><h2 id="expenseDialogTitle"><i class="fa-solid fa-plus"></i> LANÇAMENTO</h2><button type="button" id="closeDialog" class="ghost">✕</button></div>
+<div id="editHint" class="edit-hint hidden">✏️ A EDIÇÃO ALTERA SOMENTE ESTE LANÇAMENTO. PARCELAS/RECORRÊNCIAS FUTURAS NÃO SERÃO MODIFICADAS.</div>
+
+<label class="entry-type-first"><i class="fa-solid fa-compass"></i> TIPO
+<select id="entryType">
+  <option value="EXPENSE">DESPESA</option>
+  <option value="INCOME">RECEITA</option>
+  <option value="THIRD_PARTY">💳 TERCEIROS / REEMBOLSÁVEL</option>
+</select>
+</label>
+
+<label><i class="fa-solid fa-dollar-sign"></i> VALOR<input id="amount" type="number" min=".01" step=".01" required placeholder="0,00"></label>
+
+<label><i class="fa-solid fa-pen"></i> DESCRIÇÃO<input id="description" maxlength="80" placeholder="Ex.: Pão de Açúcar"></label>
+
+<div id="incomeFields" class="hidden subbox">
+  <label><i class="fa-solid fa-money-bill-wave"></i> RECEITA
+    <select id="incomeCategory">
+      <option value="SALARIO">SALÁRIO</option>
+      <option value="BONUS">BÔNUS</option>
+      <option value="REEMBOLSO">REEMBOLSO</option>
+      <option value="VENDA">VENDA</option>
+      <option value="RESTITUICAO">RESTITUIÇÃO</option>
+      <option value="OUTROS">OUTROS</option>
+    </select>
+  </label>
+  <label><i class="fa-solid fa-user"></i> RECEBIDO POR
+    <select id="receivedBy"><option value="W">W</option><option value="C">C</option></select>
+  </label>
+</div>
+
+<label id="categoryLabel" class="category-primary"><i class="fa-solid fa-tags"></i> CATEGORIA<select id="category"></select></label>
+
+<label id="groupLabel"><i class="fa-solid fa-folder"></i> GRUPO<select id="group">
+<option value="CASAL">CASAL</option><option value="ALICE">ALICE</option><option value="CONTAS">CONTAS</option>
+<option value="WILLIAM">WILLIAM</option><option value="CAROL">CAROL</option></select></label>
+
+<div class="row">
+  <label><i class="fa-solid fa-calendar-days"></i> DATA<input id="date" type="date" required></label>
+  <label id="paidByLabel"><i class="fa-solid fa-user"></i> PAGO POR<select id="paidBy"><option value="W">W</option><option value="C">C</option></select></label>
+</div>
+
+<div id="expensePaymentFields" class="single-row">
+  <label><i class="fa-solid fa-wallet"></i> PAGAMENTO<select id="payment"><option value="CARD">CARTÃO</option><option value="$">DINHEIRO (CASH)</option></select></label>
+  <label id="installmentField"><i class="fa-solid fa-list-ol"></i> PARCELAS<input id="installments" type="number" min="1" max="60" value="1"></label>
+</div>
+
+<div id="thirdPartyNote" class="hidden edit-hint">💳 ESTE VALOR ENTRA NA FATURA, MAS NÃO ENTRA EM GASTOS, CATEGORIAS OU ACERTO WILLIAM × CAROL.</div>
+<div id="cardFields" class="hidden subbox"><label id="cardLabel"><i class="fa-solid fa-credit-card"></i> CARTÃO<select id="card"><option value="W">CARTÃO WILLIAM</option><option value="C">CARTÃO CAROL</option></select></label></div>
+
+<label id="recurringToggleLabel" class="checkline"><input id="recurring" type="checkbox"><span><i class="fa-solid fa-rotate"></i> REPETIR MENSALMENTE</span></label>
+<div id="recurringFields" class="hidden subbox"><label>⏳ REPETIR ATÉ<input id="recurringUntil" type="month"></label></div>
+
+<label id="splitPaymentToggle" class="checkline split-payment-last"><input id="splitPayment" type="checkbox"><span><i class="fa-solid fa-scissors"></i> CAROL E WILLIAM PAGARAM</span></label>
+<div id="splitPaymentFields" class="hidden subbox">
+  <div class="split-pay-title">PARTE DE WILLIAM</div>
+  <div class="split-pay-grid">
+    <label><i class="fa-solid fa-dollar-sign"></i> VALOR WILLIAM<input id="splitAmountW" type="number" min="0" step=".01" placeholder="0,00"></label>
+    <label><i class="fa-solid fa-wallet"></i> PAGAMENTO WILLIAM<select id="splitPaymentW"><option value="CARD">CARTÃO</option><option value="$">CASH</option></select></label>
+  </div>
+  <div class="split-pay-title">PARTE DE CAROL</div>
+  <div class="split-pay-grid">
+    <label><i class="fa-solid fa-dollar-sign"></i> VALOR CAROL<input id="splitAmountC" type="number" min="0" step=".01" placeholder="0,00"></label>
+    <label><i class="fa-solid fa-wallet"></i> PAGAMENTO CAROL<select id="splitPaymentC"><option value="CARD">CARTÃO</option><option value="$">CASH</option></select></label>
+  </div>
+  <div class="split-pay-note">A soma de WILLIAM + CAROL deve ser igual ao valor total. Pagamento dividido é tratado como lançamento único.</div>
+</div>
+
+<button class="primary" type="submit">SALVAR</button>
+</form>
+</dialog>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script><script src="history.js?v=1071"></script><script src="app.js?v=1071"></script>
+</body></html>

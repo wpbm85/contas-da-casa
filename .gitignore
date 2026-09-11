@@ -1,0 +1,8 @@
+# Nunca commitar arquivos com dados financeiros reais, backups ou exports.
+*PRIVADO*
+*privado*
+historico_*.json
+historico_*.sql
+*IMPORTAR_HISTORICO*
+contas_*.xlsx
+*.env
