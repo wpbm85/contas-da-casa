@@ -175,6 +175,15 @@ function chartValue(key,filter){
  return d.groups[filter]?.total||0;
 }
 
+// Formata os valores exibidos sobre os pontos do gráfico: números abaixo de
+// R$ 1.000 aparecem por extenso (ex.: "350"), evitando algo confuso como
+// "0,4k". Acima disso, usa o formato compacto em milhares ("3,5k").
+function chartValueLabel(v){
+ const n=Number(v||0),sign=n<0?"-":"",abs=Math.abs(n);
+ if(abs<1000)return sign+Math.round(abs).toLocaleString("pt-BR");
+ return sign+(abs/1000).toFixed(1).replace(".",",")+"k";
+}
+
 function renderChart(){
  const filter=$("#chartFilter").value,year=current.getFullYear(),end=periodEndIndex();
  const months=Array.from({length:end+1},(_,i)=>`${year}-${String(i+1).padStart(2,"0")}`);
@@ -196,10 +205,20 @@ function renderChart(){
  const ys=v=>padT+(maxV-v)*(H-padT-padB)/range;
  const zeroY=ys(0),avgY=ys(avg);
  const pts=data.map((v,i)=>`${xs(i)},${ys(v)}`).join(" ");
- const dots=data.map((v,i)=>`<circle class="chart-dot" cx="${xs(i)}" cy="${ys(v)}" r="4"></circle><text class="chart-value" x="${xs(i)}" y="${ys(v)-8}" text-anchor="middle">${(v/1000).toFixed(1)}k</text>`).join("");
+ const lastI=data.length-1;
+ const areaPath=`M${xs(0)},${zeroY} ${data.map((v,i)=>`L${xs(i)},${ys(v)}`).join(" ")} L${xs(lastI)},${zeroY} Z`;
+ const dots=data.map((v,i)=>{
+   const cur=i===lastI;
+   return `<circle class="chart-dot${cur?" chart-dot-current":""}" cx="${xs(i)}" cy="${ys(v)}" r="${cur?6:4}"></circle><text class="chart-value${cur?" chart-value-current":""}" x="${xs(i)}" y="${ys(v)-9}" text-anchor="middle">${chartValueLabel(v)}</text>`;
+ }).join("");
  const xl=labels.map((l,i)=>`<text class="chart-label" x="${xs(i)}" y="${H-5}" text-anchor="middle">${l}</text>`).join("");
  const avgMoney=money(avg).replace("R$ ","R$ ");
  $("#historyChart").innerHTML=`<svg viewBox="0 0 ${W} ${H}">
+   <defs><linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
+     <stop offset="0%" class="chart-area-start"/>
+     <stop offset="100%" class="chart-area-end"/>
+   </linearGradient></defs>
+   <path class="chart-area" d="${areaPath}" fill="url(#areaGradient)" stroke="none"></path>
    <line class="chart-zero-line" x1="${padL}" y1="${zeroY}" x2="${W-padR}" y2="${zeroY}" stroke-width="1"/>
    <line class="chart-average-line" x1="${padL}" y1="${avgY}" x2="${W-padR}" y2="${avgY}" stroke-width="2"/>
    <text class="chart-average-caption" x="${W-padR+8}" y="${avgY-4}">MÉDIA</text>
@@ -647,12 +666,28 @@ db.auth.onAuthStateChange((event,session)=>handleSession(session));
 // A navegação rápida gruda logo abaixo do cabeçalho + barra de sincronização
 // (quando visível). A altura de ambos é recalculada em vez de fixa, porque
 // varia conforme o aparelho e se o usuário está logado.
+let sectionObserver=null;
 function syncStickyOffsets(){
  const topbarH=document.querySelector(".topbar")?.offsetHeight||0;
  const syncBar=$("#syncBar");
  const syncH=(syncBar&&!syncBar.classList.contains("hidden"))?syncBar.offsetHeight:0;
  const nav=$("#quickNav");
  if(nav)nav.style.top=(topbarH+syncH)+"px";
+ setupSectionObserver(topbarH+syncH+(nav?.offsetHeight||0));
+}
+
+// Destaca, na navegação rápida, o botão da seção que está visível no momento
+// (estilo "scroll-spy"), recriado sempre que o offset dos elementos fixos muda.
+function setupSectionObserver(stickyOffset){
+ if(sectionObserver)sectionObserver.disconnect();
+ sectionObserver=new IntersectionObserver(entries=>{
+   let best=null,bestTop=Infinity;
+   entries.forEach(e=>{
+     if(e.isIntersecting&&e.boundingClientRect.top<bestTop){bestTop=e.boundingClientRect.top;best=e.target.id}
+   });
+   if(best)document.querySelectorAll("#quickNav button").forEach(b=>b.classList.toggle("active",b.dataset.goto===best));
+ },{rootMargin:`-${stickyOffset+4}px 0px -55% 0px`,threshold:0});
+ document.querySelectorAll("main section[id]").forEach(s=>sectionObserver.observe(s));
 }
 syncStickyOffsets();
 window.addEventListener("resize",syncStickyOffsets);

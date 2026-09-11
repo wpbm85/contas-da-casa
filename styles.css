@@ -57,6 +57,12 @@ body.authenticated .auth-screen{display:none!important}
 .quick-nav button{flex:0 0 auto;display:inline-flex;align-items:center;gap:6px;border:1px solid rgba(255,255,255,.28);background:rgba(255,255,255,.1);color:#fff;border-radius:999px;padding:7px 14px;font-size:11px;font-weight:800;letter-spacing:.02em;white-space:nowrap;cursor:pointer}
 .quick-nav button i{font-size:12px}
 .quick-nav button.active{background:#fff;color:var(--brand);border-color:#fff}
+@media(max-width:600px){
+  .quick-nav{gap:6px;justify-content:center}
+  .quick-nav button{padding:9px 11px}
+  .quick-nav button i{font-size:15px}
+  .quick-nav .nav-label{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+}
 
 .chip-group{display:flex;flex-wrap:wrap;gap:7px}
 .section-filter{margin:2px 0 14px}
@@ -72,7 +78,7 @@ body.authenticated .auth-screen{display:none!important}
   .chip{background:var(--surface-soft);border-color:var(--border);color:var(--ink)}
   .chip.active{background:#3b82f6;border-color:#3b82f6;color:#fff}
 }
-@media(max-width:520px){.chip-group{gap:6px}.chip{padding:6px 10px;font-size:10.5px}.sec-totals .section-title{align-items:flex-start}.quick-nav button{padding:6px 11px;font-size:10.5px}}
+@media(max-width:520px){.chip-group{gap:6px}.chip{padding:6px 10px;font-size:10.5px}}
 
 
 .privacy-toggle{
@@ -141,6 +147,10 @@ dialog{background:var(--dialog-bg);color:var(--ink)}
 .chart-average-line{stroke:var(--chart-average);stroke-dasharray:7 6}
 .chart-average-caption{fill:var(--chart-average);font-size:9px;font-weight:850}
 .chart-dot{fill:var(--chart-line)}
+.chart-dot-current{fill:var(--brand);stroke:var(--surface,#fff);stroke-width:2}
+.chart-value-current{font-weight:900;fill:var(--brand)}
+.chart-area-start{stop-color:var(--chart-line);stop-opacity:.3}
+.chart-area-end{stop-color:var(--chart-line);stop-opacity:0}
 .chart-period-note{font-size:10px;color:var(--muted);text-align:right;margin-top:-2px;font-weight:700}
 .subavg{display:block;font-size:9px!important;font-weight:650!important;color:var(--muted);margin-top:5px!important;line-height:1.25}
 .subavg b{font-size:10px;color:inherit}
