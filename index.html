@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"><link rel="stylesheet" href="styles.css?v=1500">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"><link rel="stylesheet" href="styles.css?v=1600">
 </head>
 <body>
 <div id="authScreen" class="auth-screen">
@@ -32,7 +32,7 @@
   <button data-goto="sec-card" type="button" aria-label="Faturas" title="Faturas"><i class="fa-solid fa-credit-card"></i><span class="nav-label">FATURAS</span></button>
   <button data-goto="sec-subtotals" type="button" aria-label="Resumo" title="Resumo"><i class="fa-solid fa-layer-group"></i><span class="nav-label">RESUMO</span></button>
   <button data-goto="sec-totals" type="button" aria-label="Totais" title="Totais"><i class="fa-solid fa-chart-pie"></i><span class="nav-label">TOTAIS</span></button>
-  <button data-goto="sec-income" type="button" aria-label="Receitas" title="Receitas"><i class="fa-solid fa-arrow-trend-up"></i><span class="nav-label">RECEITAS</span></button>
+  <button data-goto="sec-income" type="button" aria-label="Receitas" title="Receitas"><i class="fa-solid fa-sack-dollar"></i><span class="nav-label">RECEITAS</span></button>
   <button data-goto="sec-history" type="button" aria-label="Gráficos" title="Gráficos"><i class="fa-solid fa-chart-line"></i><span class="nav-label">GRÁFICOS</span></button>
   <button data-goto="sec-launches" type="button" aria-label="Lançamentos" title="Lançamentos"><i class="fa-solid fa-list-check"></i><span class="nav-label">LANÇAMENTOS</span></button>
 </nav>
@@ -49,20 +49,20 @@
 </div>
 <main>
 <section class="card sec-family" id="sec-family">
-  <h2><i class="fa-solid fa-house"></i> TOTAL FAMÍLIA</h2>
+  <h2>TOTAL FAMÍLIA</h2>
   <div class="big" id="familyTotal">R$ 0,00</div>
   <div class="split"><div><span>WILLIAM</span><strong id="wPaid"></strong></div><div><span>CAROL</span><strong id="cPaid"></strong></div></div>
   <div class="settlement" id="settlement"></div>
 </section>
 
 <section class="card sec-card" id="sec-card">
-  <h2><i class="fa-solid fa-credit-card"></i> FATURAS</h2>
+  <h2>FATURAS</h2>
   <div class="split"><div><span>CARTÃO WILLIAM</span><strong id="cardW"></strong></div><div><span>CARTÃO CAROL</span><strong id="cardC"></strong></div></div>
   <div class="total-line"><span>TOTAL DAS FATURAS</span><strong id="cardTotal"></strong></div>
 </section>
 
 <section class="card sec-subtotals" id="sec-subtotals">
-  <h2><i class="fa-solid fa-layer-group"></i> RESUMO</h2>
+  <h2>RESUMO</h2>
   <div class="subgrid">
     <div class="subtile contas"><span>CONTAS</span><strong id="totalContas"></strong><small class="subavg">MÉDIA <span class="subavg-period"></span> · <b id="avgContas" class="subavg-value"></b></small></div>
     <div class="subtile alice"><span>ALICE</span><strong id="totalAlice"></strong><small class="subavg">MÉDIA <span class="subavg-period"></span> · <b id="avgAlice" class="subavg-value"></b></small></div>
@@ -73,7 +73,7 @@
 </section>
 
 <section class="card sec-totals" id="sec-totals">
-  <h2><i class="fa-solid fa-chart-pie"></i> TOTAIS</h2>
+  <h2>TOTAIS</h2>
   <div class="chip-group section-filter" id="totalsGroupChips">
     <button type="button" class="chip active" data-value="">TODOS</button>
     <button type="button" class="chip" data-value="CONTAS">CONTAS</button>
@@ -87,7 +87,7 @@
 </section>
 
 <section class="card sec-income" id="sec-income">
-  <h2><i class="fa-solid fa-arrow-trend-up"></i> RECEITAS</h2>
+  <h2>RECEITAS</h2>
   <div class="split">
     <div><span>WILLIAM</span><strong id="incomeW">R$ 0,00</strong></div>
     <div><span>CAROL</span><strong id="incomeC">R$ 0,00</strong></div>
@@ -97,8 +97,9 @@
 </section>
 
 <section class="card sec-history" id="sec-history">
-  <div class="section-title">
-    <h2><i class="fa-solid fa-chart-line"></i> GRÁFICOS · <span id="chartYear"></span></h2>
+  <h2>GRÁFICOS</h2>
+  <div class="section-title chart-tools">
+    <span class="mini" id="chartYear"></span>
     <select id="chartFilter">
       <option value="FAMILY">TOTAL FAMÍLIA</option>
       <option value="CONTAS">CONTAS</option>
@@ -117,7 +118,7 @@
 </section>
 
 <section class="card sec-launches" id="sec-launches">
-  <h2><i class="fa-solid fa-list-check"></i> LANÇAMENTOS</h2>
+  <h2>LANÇAMENTOS</h2>
   <div class="chip-group section-filter" id="filterGroupChips">
     <button type="button" class="chip active" data-value="">TODOS</button>
     <button type="button" class="chip" data-value="CASAL">CASAL</button>
@@ -214,5 +215,5 @@
 <button class="primary" type="submit">SALVAR</button>
 </form>
 </dialog>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script><script src="history.js?v=1500"></script><script src="app.js?v=1500"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script><script src="history.js?v=1600"></script><script src="app.js?v=1600"></script>
 </body></html>
