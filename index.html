@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"><link rel="stylesheet" href="styles.css?v=1071">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"><link rel="stylesheet" href="styles.css?v=1200">
 </head>
 <body>
 <div id="authScreen" class="auth-screen">
@@ -36,28 +36,46 @@
 </div>
 <header class="topbar">
   <div><div class="eyebrow">CONTAS DA CASA</div><h1 id="monthTitle"></h1></div>
-  <div class="month-nav"><button id="privacyToggle" class="privacy-toggle" type="button" aria-label="Mostrar valores" title="Mostrar valores"><i class="fa-solid fa-lock"></i></button><button id="prevMonth">‹</button><button id="nextMonth">›</button></div>
+  <div class="month-nav"><button id="exportMonth" class="export-toggle" type="button" aria-label="Exportar mês" title="Exportar mês (XLSX)"><i class="fa-solid fa-file-excel"></i></button><button id="privacyToggle" class="privacy-toggle" type="button" aria-label="Mostrar valores" title="Mostrar valores"><i class="fa-solid fa-lock"></i></button><button id="prevMonth">‹</button><button id="nextMonth">›</button></div>
 </header>
+<nav class="quick-nav" id="quickNav" aria-label="Ir para seção">
+  <button data-goto="sec-family" type="button">1 · FAMÍLIA</button>
+  <button data-goto="sec-card" type="button">2 · FATURA</button>
+  <button data-goto="sec-totals" type="button">3 · TOTAIS</button>
+  <button data-goto="sec-subtotals" type="button">4 · SUBTOTAIS</button>
+  <button data-goto="sec-income" type="button">5 · RECEITAS</button>
+  <button data-goto="sec-history" type="button">6 · GRÁFICOS</button>
+  <button data-goto="sec-launches" type="button">7 · LANÇAMENTOS</button>
+</nav>
 <main>
-<section class="card sec-family">
-  <div class="section-title family-head"><h2><i class="fa-solid fa-house"></i> 1 · TOTAL FAMÍLIA</h2><button id="exportMonth" class="secondary-btn family-export" type="button"><i class="fa-solid fa-file-excel"></i> EXPORTAR MÊS</button></div>
+<section class="card sec-family" id="sec-family">
+  <div class="section-title family-head"><h2><i class="fa-solid fa-house"></i> 1 · TOTAL FAMÍLIA</h2></div>
   <div class="big" id="familyTotal">R$ 0,00</div>
   <div class="split"><div><span>WILLIAM</span><strong id="wPaid"></strong></div><div><span>CAROL</span><strong id="cPaid"></strong></div></div>
   <div class="settlement" id="settlement"></div>
 </section>
 
-<section class="card sec-card">
+<section class="card sec-card" id="sec-card">
   <h2><i class="fa-solid fa-credit-card"></i> 2 · FATURA</h2>
   <div class="split"><div><span>CARTÃO WILLIAM</span><strong id="cardW"></strong></div><div><span>CARTÃO CAROL</span><strong id="cardC"></strong></div></div>
   <div class="total-line"><span>TOTAL DAS FATURAS</span><strong id="cardTotal"></strong></div>
 </section>
 
-<section class="card sec-totals">
-  <div class="section-title totals-head"><h2><i class="fa-solid fa-chart-pie"></i> 3 · TOTAIS</h2><div class="totals-tools"><select id="totalsGroup"><option value="">TODOS</option><option value="CONTAS">CONTAS</option><option value="ALICE">ALICE</option><option value="CASAL">CASAL</option><option value="WILLIAM">WILLIAM</option><option value="CAROL">CAROL</option></select></div></div>
+<section class="card sec-totals" id="sec-totals">
+  <div class="section-title totals-head"><h2><i class="fa-solid fa-chart-pie"></i> 3 · TOTAIS</h2></div>
+  <div class="chip-group section-filter" id="totalsGroupChips">
+    <button type="button" class="chip active" data-value="">TODOS</button>
+    <button type="button" class="chip" data-value="CONTAS">CONTAS</button>
+    <button type="button" class="chip" data-value="ALICE">ALICE</button>
+    <button type="button" class="chip" data-value="CASAL">CASAL</button>
+    <button type="button" class="chip" data-value="WILLIAM">WILLIAM</button>
+    <button type="button" class="chip" data-value="CAROL">CAROL</button>
+  </div>
+  <select id="totalsGroup" class="visually-hidden" tabindex="-1" aria-hidden="true"><option value="">TODOS</option><option value="CONTAS">CONTAS</option><option value="ALICE">ALICE</option><option value="CASAL">CASAL</option><option value="WILLIAM">WILLIAM</option><option value="CAROL">CAROL</option></select>
   <div id="categoryTotals" class="category-list"></div>
 </section>
 
-<section class="card sec-subtotals">
+<section class="card sec-subtotals" id="sec-subtotals">
   <h2><i class="fa-solid fa-layer-group"></i> 4 · SUBTOTAIS</h2>
   <div class="subgrid">
     <div class="subtile contas"><span>CONTAS</span><strong id="totalContas"></strong><small class="subavg">MÉDIA <span class="subavg-period"></span> · <b id="avgContas" class="subavg-value"></b></small></div>
@@ -75,7 +93,8 @@
 
 
 
-<section class="card sec-income">
+
+<section class="card sec-income" id="sec-income">
   <div class="section-title"><h2><i class="fa-solid fa-arrow-trend-up"></i> 5 · RECEITAS</h2><span class="mini">ENTRADAS DO MÊS</span></div>
   <div class="split">
     <div><span>WILLIAM</span><strong id="incomeW">R$ 0,00</strong></div>
@@ -85,7 +104,7 @@
   <div id="incomeBreakdown" class="income-list"></div>
 </section>
 
-<section class="card sec-history">
+<section class="card sec-history" id="sec-history">
   <div class="section-title">
     <h2><i class="fa-solid fa-chart-line"></i> 6 · GRÁFICOS · <span id="chartYear"></span></h2>
     <select id="chartFilter">
@@ -105,16 +124,22 @@
   <div id="historyChart" class="chart"></div><div id="chartPeriodNote" class="chart-period-note"></div>
 </section>
 
-<section class="card sec-launches">
+<section class="card sec-launches" id="sec-launches">
   <div class="section-title launches-head">
     <h2><i class="fa-solid fa-list-check"></i> 7 · LANÇAMENTOS</h2>
-    <div class="launch-tools">
-      <select id="filterGroup">
-      <option value="">TODOS</option><option value="CASAL">CASAL</option><option value="ALICE">ALICE</option>
-      <option value="CONTAS">CONTAS</option><option value="WILLIAM">WILLIAM</option><option value="CAROL">CAROL</option>
-      </select>
-    </div>
   </div>
+  <div class="chip-group section-filter" id="filterGroupChips">
+    <button type="button" class="chip active" data-value="">TODOS</button>
+    <button type="button" class="chip" data-value="CASAL">CASAL</button>
+    <button type="button" class="chip" data-value="ALICE">ALICE</button>
+    <button type="button" class="chip" data-value="CONTAS">CONTAS</button>
+    <button type="button" class="chip" data-value="WILLIAM">WILLIAM</button>
+    <button type="button" class="chip" data-value="CAROL">CAROL</button>
+  </div>
+  <select id="filterGroup" class="visually-hidden" tabindex="-1" aria-hidden="true">
+    <option value="">TODOS</option><option value="CASAL">CASAL</option><option value="ALICE">ALICE</option>
+    <option value="CONTAS">CONTAS</option><option value="WILLIAM">WILLIAM</option><option value="CAROL">CAROL</option>
+  </select>
   <div id="historicalNotice" class="history-note hidden">📚 MÊS IMPORTADO DA PLANILHA: OS VALORES HISTÓRICOS SÃO CONSOLIDADOS. LANÇAMENTOS INDIVIDUAIS NÃO FORAM INVENTADOS.</div>
   <div id="transactions" class="stack"></div>
 </section>
@@ -199,5 +224,5 @@
 <button class="primary" type="submit">SALVAR</button>
 </form>
 </dialog>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script><script src="history.js?v=1071"></script><script src="app.js?v=1071"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script><script src="history.js?v=1200"></script><script src="app.js?v=1200"></script>
 </body></html>

@@ -644,5 +644,35 @@ async function handleSession(session){
 db.auth.onAuthStateChange((event,session)=>handleSession(session));
 (async()=>{const {data:{session}}=await db.auth.getSession();await handleSession(session)})();
 
+// Navegação rápida: rola suavemente até a seção clicada, com uma folga para
+// não deixar o topo do card colado embaixo do cabeçalho fixo.
+document.querySelectorAll("#quickNav [data-goto]").forEach(btn=>{
+ btn.onclick=()=>{
+   const target=document.getElementById(btn.dataset.goto);
+   if(!target)return;
+   const topbarH=document.querySelector(".topbar")?.offsetHeight||70;
+   const y=target.getBoundingClientRect().top+window.scrollY-topbarH-12;
+   window.scrollTo({top:y,behavior:"smooth"});
+ };
+});
+
+// Chips de filtro: espelham o valor num <select> escondido, que continua sendo
+// a fonte de verdade usada pelo render() — assim a lógica financeira não muda.
+function wireChipGroup(groupId,selectId){
+ const group=$(groupId);
+ if(!group)return;
+ const select=$(selectId);
+ group.querySelectorAll(".chip").forEach(chip=>{
+   chip.onclick=()=>{
+     group.querySelectorAll(".chip").forEach(c=>c.classList.remove("active"));
+     chip.classList.add("active");
+     select.value=chip.dataset.value;
+     select.dispatchEvent(new Event("change"));
+   };
+ });
+}
+wireChipGroup("#totalsGroupChips","#totalsGroup");
+wireChipGroup("#filterGroupChips","#filterGroup");
+
 if("serviceWorker" in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js"));
 updateCategories();updatePayment();updateRecurring();updateEntryType();updateSplitPayment();
