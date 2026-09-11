@@ -637,21 +637,38 @@ $("#migrateLocalBtn").onclick=async()=>{
 
 async function handleSession(session){
  currentUser=session?.user||null;
- if(!currentUser){document.body.classList.remove("authenticated");$("#syncBar").classList.add("hidden");remoteRows=[];if(realtimeChannel){db.removeChannel(realtimeChannel);realtimeChannel=null}return}
+ if(!currentUser){document.body.classList.remove("authenticated");$("#syncBar").classList.add("hidden");remoteRows=[];if(realtimeChannel){db.removeChannel(realtimeChannel);realtimeChannel=null}syncStickyOffsets();return}
  document.body.classList.add("authenticated");$("#syncBar").classList.remove("hidden");$("#syncUser").textContent="👤 "+(currentUser.email||"USUÁRIO");
- await refreshRemote();subscribeRealtime();
+ await refreshRemote();subscribeRealtime();syncStickyOffsets();
 }
 db.auth.onAuthStateChange((event,session)=>handleSession(session));
 (async()=>{const {data:{session}}=await db.auth.getSession();await handleSession(session)})();
 
+// A navegação rápida gruda logo abaixo do cabeçalho + barra de sincronização
+// (quando visível). A altura de ambos é recalculada em vez de fixa, porque
+// varia conforme o aparelho e se o usuário está logado.
+function syncStickyOffsets(){
+ const topbarH=document.querySelector(".topbar")?.offsetHeight||0;
+ const syncBar=$("#syncBar");
+ const syncH=(syncBar&&!syncBar.classList.contains("hidden"))?syncBar.offsetHeight:0;
+ const nav=$("#quickNav");
+ if(nav)nav.style.top=(topbarH+syncH)+"px";
+}
+syncStickyOffsets();
+window.addEventListener("resize",syncStickyOffsets);
+window.addEventListener("load",syncStickyOffsets);
+
 // Navegação rápida: rola suavemente até a seção clicada, com uma folga para
-// não deixar o topo do card colado embaixo do cabeçalho fixo.
+// não deixar o topo do card colado embaixo do cabeçalho fixo + barra de sync.
 document.querySelectorAll("#quickNav [data-goto]").forEach(btn=>{
  btn.onclick=()=>{
    const target=document.getElementById(btn.dataset.goto);
    if(!target)return;
    const topbarH=document.querySelector(".topbar")?.offsetHeight||70;
-   const y=target.getBoundingClientRect().top+window.scrollY-topbarH-12;
+   const syncBar=$("#syncBar");
+   const syncH=(syncBar&&!syncBar.classList.contains("hidden"))?syncBar.offsetHeight:0;
+   const navH=$("#quickNav")?.offsetHeight||0;
+   const y=target.getBoundingClientRect().top+window.scrollY-topbarH-syncH-navH-12;
    window.scrollTo({top:y,behavior:"smooth"});
  };
 });
