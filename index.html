@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"><link rel="stylesheet" href="styles.css?v=1400">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"><link rel="stylesheet" href="styles.css?v=1500">
 </head>
 <body>
 <div id="authScreen" class="auth-screen">
@@ -23,10 +23,6 @@
     </form>
   </div>
 </div>
-<div id="syncBar" class="sync-bar hidden">
-  <span id="syncUser"></span><span id="syncStatus"><i class="fa-solid fa-cloud"></i> SINCRONIZADO</span>
-  <button id="logoutBtn" type="button">SAIR</button>
-</div>
 <header class="topbar">
   <div><div class="eyebrow">CONTAS DA CASA</div><h1 id="monthTitle"></h1></div>
   <div class="month-nav"><button id="exportMonth" class="export-toggle" type="button" aria-label="Exportar mês" title="Exportar mês (XLSX)"><i class="fa-solid fa-file-excel"></i></button><button id="privacyToggle" class="privacy-toggle" type="button" aria-label="Mostrar valores" title="Mostrar valores"><i class="fa-solid fa-lock"></i></button><button id="prevMonth">‹</button><button id="nextMonth">›</button></div>
@@ -40,6 +36,10 @@
   <button data-goto="sec-history" type="button" aria-label="Gráficos" title="Gráficos"><i class="fa-solid fa-chart-line"></i><span class="nav-label">GRÁFICOS</span></button>
   <button data-goto="sec-launches" type="button" aria-label="Lançamentos" title="Lançamentos"><i class="fa-solid fa-list-check"></i><span class="nav-label">LANÇAMENTOS</span></button>
 </nav>
+<div id="syncBar" class="sync-bar hidden">
+  <span id="syncUser"></span><span id="syncStatus"><i class="fa-solid fa-cloud"></i> SINCRONIZADO</span>
+  <button id="logoutBtn" type="button">SAIR</button>
+</div>
 <div id="migrationBanner" class="migration-banner hidden">
   <div><strong>📦 DADOS LOCAIS ENCONTRADOS</strong><br><span id="migrationText"></span></div>
   <div class="migration-actions">
@@ -49,17 +49,20 @@
 </div>
 <main>
 <section class="card sec-family" id="sec-family">
+  <h2><i class="fa-solid fa-house"></i> TOTAL FAMÍLIA</h2>
   <div class="big" id="familyTotal">R$ 0,00</div>
   <div class="split"><div><span>WILLIAM</span><strong id="wPaid"></strong></div><div><span>CAROL</span><strong id="cPaid"></strong></div></div>
   <div class="settlement" id="settlement"></div>
 </section>
 
 <section class="card sec-card" id="sec-card">
+  <h2><i class="fa-solid fa-credit-card"></i> FATURAS</h2>
   <div class="split"><div><span>CARTÃO WILLIAM</span><strong id="cardW"></strong></div><div><span>CARTÃO CAROL</span><strong id="cardC"></strong></div></div>
   <div class="total-line"><span>TOTAL DAS FATURAS</span><strong id="cardTotal"></strong></div>
 </section>
 
 <section class="card sec-subtotals" id="sec-subtotals">
+  <h2><i class="fa-solid fa-layer-group"></i> RESUMO</h2>
   <div class="subgrid">
     <div class="subtile contas"><span>CONTAS</span><strong id="totalContas"></strong><small class="subavg">MÉDIA <span class="subavg-period"></span> · <b id="avgContas" class="subavg-value"></b></small></div>
     <div class="subtile alice"><span>ALICE</span><strong id="totalAlice"></strong><small class="subavg">MÉDIA <span class="subavg-period"></span> · <b id="avgAlice" class="subavg-value"></b></small></div>
@@ -70,6 +73,7 @@
 </section>
 
 <section class="card sec-totals" id="sec-totals">
+  <h2><i class="fa-solid fa-chart-pie"></i> TOTAIS</h2>
   <div class="chip-group section-filter" id="totalsGroupChips">
     <button type="button" class="chip active" data-value="">TODOS</button>
     <button type="button" class="chip" data-value="CONTAS">CONTAS</button>
@@ -83,7 +87,7 @@
 </section>
 
 <section class="card sec-income" id="sec-income">
-  <div class="section-title"><span class="mini">ENTRADAS DO MÊS</span></div>
+  <h2><i class="fa-solid fa-arrow-trend-up"></i> RECEITAS</h2>
   <div class="split">
     <div><span>WILLIAM</span><strong id="incomeW">R$ 0,00</strong></div>
     <div><span>CAROL</span><strong id="incomeC">R$ 0,00</strong></div>
@@ -94,7 +98,7 @@
 
 <section class="card sec-history" id="sec-history">
   <div class="section-title">
-    <span class="mini" id="chartYear"></span>
+    <h2><i class="fa-solid fa-chart-line"></i> GRÁFICOS · <span id="chartYear"></span></h2>
     <select id="chartFilter">
       <option value="FAMILY">TOTAL FAMÍLIA</option>
       <option value="CONTAS">CONTAS</option>
@@ -113,6 +117,7 @@
 </section>
 
 <section class="card sec-launches" id="sec-launches">
+  <h2><i class="fa-solid fa-list-check"></i> LANÇAMENTOS</h2>
   <div class="chip-group section-filter" id="filterGroupChips">
     <button type="button" class="chip active" data-value="">TODOS</button>
     <button type="button" class="chip" data-value="CASAL">CASAL</button>
@@ -209,5 +214,5 @@
 <button class="primary" type="submit">SALVAR</button>
 </form>
 </dialog>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script><script src="history.js?v=1400"></script><script src="app.js?v=1400"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script><script src="history.js?v=1500"></script><script src="app.js?v=1500"></script>
 </body></html>

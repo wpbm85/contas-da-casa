@@ -663,17 +663,14 @@ async function handleSession(session){
 db.auth.onAuthStateChange((event,session)=>handleSession(session));
 (async()=>{const {data:{session}}=await db.auth.getSession();await handleSession(session)})();
 
-// A navegação rápida gruda logo abaixo do cabeçalho + barra de sincronização
-// (quando visível). A altura de ambos é recalculada em vez de fixa, porque
-// varia conforme o aparelho e se o usuário está logado.
+// A navegação rápida gruda logo abaixo do cabeçalho. A altura dele é
+// recalculada em vez de fixa, porque varia conforme o aparelho.
 let sectionObserver=null;
 function syncStickyOffsets(){
  const topbarH=document.querySelector(".topbar")?.offsetHeight||0;
- const syncBar=$("#syncBar");
- const syncH=(syncBar&&!syncBar.classList.contains("hidden"))?syncBar.offsetHeight:0;
  const nav=$("#quickNav");
- if(nav)nav.style.top=(topbarH+syncH)+"px";
- setupSectionObserver(topbarH+syncH+(nav?.offsetHeight||0));
+ if(nav)nav.style.top=topbarH+"px";
+ setupSectionObserver(topbarH+(nav?.offsetHeight||0));
 }
 
 // Destaca, na navegação rápida, o botão da seção que está visível no momento
@@ -700,10 +697,8 @@ document.querySelectorAll("#quickNav [data-goto]").forEach(btn=>{
    const target=document.getElementById(btn.dataset.goto);
    if(!target)return;
    const topbarH=document.querySelector(".topbar")?.offsetHeight||70;
-   const syncBar=$("#syncBar");
-   const syncH=(syncBar&&!syncBar.classList.contains("hidden"))?syncBar.offsetHeight:0;
    const navH=$("#quickNav")?.offsetHeight||0;
-   const y=target.getBoundingClientRect().top+window.scrollY-topbarH-syncH-navH-12;
+   const y=target.getBoundingClientRect().top+window.scrollY-topbarH-navH-12;
    window.scrollTo({top:y,behavior:"smooth"});
  };
 });
